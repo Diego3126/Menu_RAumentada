@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Menú RA - Restaurante</title>
+    <title>Menú AR - Restaurante</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -23,6 +25,8 @@
     <section class="categories">
         <h2>Categorías</h2>
         <div class="category-list" id="categoryList">
+            <!-- JS llena aquí -->
+            <div class="loading-spinner">Cargando categorías...</div>
         </div>
     </section>
 
@@ -30,22 +34,11 @@
     <section class="dishes">
         <h2>Platos</h2>
         <div class="dishes-grid" id="dishesGrid">
+            <!-- JS llena aquí -->
+            <div class="loading-spinner">Cargando platos...</div>
         </div>
     </section>
 </main>
-
-<!-- Modal para detalles del plato (MRA-7 y MRA-8) -->
-<div id="dishModal" class="modal">
-    <div class="modal-content">
-        <span class="close-modal">&times;</span>
-        <h3 id="modalTitle"></h3>
-        <p id="modalDescription"></p>
-        <p id="modalPrice"></p>
-        <button id="viewARModalBtn" class="ar-btn-small">
-            <i class="fas fa-cube"></i> Ver en AR
-        </button>
-    </div>
-</div>
 
 <!-- Modal de Realidad Aumentada (simulación / integración) -->
 <div id="arModal" class="modal ar-modal">
