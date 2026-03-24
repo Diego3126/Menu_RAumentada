@@ -9,6 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GLTFLoader para cargar modelos GLB/GLTF -->
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 
@@ -46,23 +50,46 @@
     </section>
 </main>
 
-<!-- Modal de Realidad Aumentada (simulación / integración) -->
+<!-- Modal de Realidad Aumentada - Visor 3D Interactivo -->
 <div id="arModal" class="modal ar-modal">
     <div class="modal-content ar-content">
         <span class="close-ar-modal">&times;</span>
-        <h3>Realidad Aumentada</h3>
-        <div class="ar-viewer">
-            <p><i class="fas fa-vr-cardboard"></i> Simulación de AR</p>
-            <div class="ar-placeholder">
-                📱 Apunta tu cámara al código o <br>
-                <strong>visualiza el plato en 3D</strong>
+        <h3>Visualizador 3D - <span id="dishNameAR"></span></h3>
+        
+        <!-- Canvas para Three.js -->
+        <div id="viewer3D-container" class="viewer-3d-container">
+            <canvas id="viewer3D-canvas"></canvas>
+            <div id="viewer3D-loading" class="loading-spinner">Cargando modelo 3D...</div>
+        </div>
+        
+        <!-- Controles -->
+        <div class="viewer-controls">
+            <div class="control-group">
+                <label>Escala:</label>
+                <input type="range" id="scaleSlider" min="0.5" max="3" step="0.1" value="1" class="control-slider">
+                <span id="scaleValue">1.0x</span>
             </div>
+            <div class="control-group">
+                <label>Rotación Automática:</label>
+                <button id="autoRotateToggle" class="control-btn">
+                    <i class="fas fa-sync"></i> Activar
+                </button>
+            </div>
+            <div class="control-tips">
+                <p><i class="fas fa-mouse"></i> Arrastra para rotar | <i class="fas fa-scroll"></i> Scroll para zoom</p>
+            </div>
+        </div>
+        
+        <!-- Info del plato -->
+        <div class="dish-info-ar" id="dishInfoAR">
+            <!-- JS llena aquí con detalles del plato -->
             <img src="https://placehold.co/300x200/ff8c42/white?text=Modelo+3D" alt="Modelo AR placeholder">
             <p class="ar-note">*En una implementación real, aquí se usaría <strong>Three.js</strong> o <strong>model-viewer</strong> con modelos 3D.</p>
         </div>
     </div>
 </div>
 
+<script src="3d-viewer.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
