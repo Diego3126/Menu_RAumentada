@@ -1,14 +1,29 @@
 // Configuración
-const API_URL = 'http://localhost:3000/api';
-let platoActual = null;
-let ingredientesBase = [];
-let ingredientesAdicionales = [];
-let ingredientesEliminados = [];  // IDs de ingredientes base eliminados
-let ingredientesAgregados = [];    // IDs de ingredientes adicionales agregados
+const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000/api'
+    : '/api';
+
+console.log('🚀 Iniciando pedido.js');
+console.log('🌐 API_URL:', API_URL);
 
 // Obtener ID del plato de la URL
 const urlParams = new URLSearchParams(window.location.search);
 const platoId = urlParams.get('id');
+
+console.log('📌 Plato ID desde URL:', platoId);
+
+if (!platoId) {
+    console.error('❌ No se encontró ID de plato');
+    alert('No se especificó qué plato personalizar');
+    window.location.href = 'index.html';
+}
+
+// Variables globales
+let platoActual = null;
+let ingredientesBase = [];
+let ingredientesAdicionales = [];
+let ingredientesEliminados = [];
+let ingredientesAgregados = [];
 
 // Elementos DOM
 const platoNombre = document.getElementById('platoNombre');
@@ -21,43 +36,64 @@ const ingredientesEliminadosSpan = document.getElementById('ingredientesEliminad
 const ingredientesAgregadosSpan = document.getElementById('ingredientesAgregados');
 const precioTotalSpan = document.getElementById('precioTotal');
 const confirmarPedidoBtn = document.getElementById('confirmarPedidoBtn');
-const confirmModal = document.getElementById('confirmModal');
-const closeModal = document.querySelector('.close-modal');
-const seguirComprandoBtn = document.getElementById('seguirComprandoBtn');
+
+console.log('📦 Elementos DOM verificados');
 
 // Cargar datos del plato
 async function cargarPlato() {
-    if (!platoId) {
-        window.location.href = 'index.html';
-        return;
-    }
+    console.log('🔄 Cargando plato ID:', platoId);
 
     try {
-        const response = await fetch(`${API_URL}/platos/${platoId}`);
+        const url = `${API_URL}/platos/${platoId}`;
+        console.log('📡 Fetching:', url);
+
+        const response = await fetch(url);
+        console.log('📥 Status:', response.status);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const data = await response.json();
+        console.log('✅ Datos recibidos:', data);
 
         platoActual = data.plato;
-        ingredientesBase = data.ingredientesBase;
-        ingredientesAdicionales = data.ingredientesAdicionales;
+        ingredientesBase = data.ingredientesBase || [];
+        ingredientesAdicionales = data.ingredientesAdicionales || [];
+
+        console.log('🍽️ Plato:', platoActual?.nombre);
+        console.log('🥬 Ingredientes base:', ingredientesBase.length);
+        console.log('➕ Ingredientes adicionales:', ingredientesAdicionales.length);
 
         // Renderizar UI
-        platoNombre.textContent = platoActual.nombre;
-        platoDescripcion.textContent = platoActual.descripcion;
-        precioBaseSpan.textContent = `$${platoActual.precio}`;
+        if (platoNombre) platoNombre.textContent = platoActual.nombre;
+        if (platoDescripcion) platoDescripcion.textContent = platoActual.descripcion;
+        if (precioBaseSpan) precioBaseSpan.textContent = `$${parseFloat(platoActual.precio).toFixed(2)}`;
 
         renderIngredientesBase();
         renderIngredientesAdicionales();
         actualizarResumen();
 
     } catch (error) {
-        console.error('Error al cargar plato:', error);
-        platoNombre.textContent = 'Error al cargar el plato';
+        console.error('❌ Error:', error);
+        if (platoNombre) {
+            platoNombre.textContent = 'Error al cargar';
+            platoDescripcion.textContent = error.message;
+        }
+        alert('Error al cargar el plato: ' + error.message);
     }
 }
 
-// Renderizar ingredientes base (MRA-15)
+// Renderizar ingredientes base
 function renderIngredientesBase() {
+    if (!ingredientesBaseGrid) return;
+
     ingredientesBaseGrid.innerHTML = '';
+
+    if (ingredientesBase.length === 0) {
+        ingredientesBaseGrid.innerHTML = '<p class="no-ingredientes">No hay ingredientes registrados</p>';
+        return;
+    }
 
     ingredientesBase.forEach(ing => {
         const isEliminado = ingredientesEliminados.includes(ing.id);
@@ -65,18 +101,24 @@ function renderIngredientesBase() {
         card.className = `ingrediente-card base ${isEliminado ? 'eliminado' : ''}`;
         card.innerHTML = `
             <div class="ingrediente-nombre">${ing.nombre}</div>
-            <div class="ingrediente-categoria">${ing.categoria}</div>
+            <div class="ingrediente-categoria">${ing.categoria || 'base'}</div>
             ${isEliminado ? '<i class="fas fa-ban"></i>' : '<i class="fas fa-check"></i>'}
         `;
-
         card.addEventListener('click', () => toggleIngredienteBase(ing.id));
         ingredientesBaseGrid.appendChild(card);
     });
 }
 
-// Renderizar ingredientes adicionales (MRA-17)
+// Renderizar ingredientes adicionales
 function renderIngredientesAdicionales() {
+    if (!ingredientesAdicionalesGrid) return;
+
     ingredientesAdicionalesGrid.innerHTML = '';
+
+    if (ingredientesAdicionales.length === 0) {
+        ingredientesAdicionalesGrid.innerHTML = '<p class="no-ingredientes">No hay ingredientes adicionales</p>';
+        return;
+    }
 
     ingredientesAdicionales.forEach(ing => {
         const isAgregado = ingredientesAgregados.includes(ing.id);
@@ -84,16 +126,15 @@ function renderIngredientesAdicionales() {
         card.className = `ingrediente-card adicional ${isAgregado ? 'agregado' : ''}`;
         card.innerHTML = `
             <div class="ingrediente-nombre">${ing.nombre}</div>
-            <div class="ingrediente-precio">+$${ing.precio_extra}</div>
+            <div class="ingrediente-precio">+$${parseFloat(ing.precio_extra).toFixed(2)}</div>
             ${isAgregado ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-plus-circle"></i>'}
         `;
-
         card.addEventListener('click', () => toggleIngredienteAdicional(ing.id));
         ingredientesAdicionalesGrid.appendChild(card);
     });
 }
 
-// Eliminar ingrediente base (MRA-16)
+// Eliminar ingrediente base
 function toggleIngredienteBase(ingredienteId) {
     const index = ingredientesEliminados.indexOf(ingredienteId);
     if (index === -1) {
@@ -105,7 +146,7 @@ function toggleIngredienteBase(ingredienteId) {
     actualizarResumen();
 }
 
-// Agregar ingrediente adicional (MRA-17)
+// Agregar ingrediente adicional
 function toggleIngredienteAdicional(ingredienteId) {
     const index = ingredientesAgregados.indexOf(ingredienteId);
     if (index === -1) {
@@ -128,86 +169,129 @@ async function actualizarResumen() {
         .filter(ing => ingredientesAgregados.includes(ing.id))
         .map(ing => ing.nombre);
 
-    ingredientesIncluidosSpan.textContent = ingredientesBaseActivos.length > 0
-        ? ingredientesBaseActivos.join(', ')
-        : 'Ninguno';
+    if (ingredientesIncluidosSpan) {
+        ingredientesIncluidosSpan.textContent = ingredientesBaseActivos.length > 0
+            ? ingredientesBaseActivos.join(', ')
+            : 'Ninguno';
+    }
 
-    ingredientesEliminadosSpan.textContent = ingredientesEliminados.length > 0
-        ? ingredientesBase.filter(ing => ingredientesEliminados.includes(ing.id)).map(ing => ing.nombre).join(', ')
-        : 'Ninguno';
+    if (ingredientesEliminadosSpan) {
+        ingredientesEliminadosSpan.textContent = ingredientesEliminados.length > 0
+            ? ingredientesBase.filter(ing => ingredientesEliminados.includes(ing.id)).map(ing => ing.nombre).join(', ')
+            : 'Ninguno';
+    }
 
-    ingredientesAgregadosSpan.textContent = ingredientesAgregadosNombres.length > 0
-        ? ingredientesAgregadosNombres.join(', ')
-        : 'Ninguno';
+    if (ingredientesAgregadosSpan) {
+        ingredientesAgregadosSpan.textContent = ingredientesAgregadosNombres.length > 0
+            ? ingredientesAgregadosNombres.join(', ')
+            : 'Ninguno';
+    }
 
     // Calcular precio total
     try {
-        const response = await fetch(`${API_URL}/personalizacion/calcular`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                plato_id: platoId,
-                ingredientes_agregados_ids: ingredientesAgregados,
-                ingredientes_eliminados_ids: ingredientesEliminados
-            })
-        });
-
-        const data = await response.json();
-        precioTotalSpan.textContent = `$${data.precio_total}`;
-
-    } catch (error) {
-        console.error('Error al calcular precio:', error);
-        // Fallback: cálculo local aproximado
-        let total = parseFloat(platoActual.precio);
+        let total = parseFloat(platoActual?.precio || 0);
         ingredientesAgregados.forEach(id => {
             const ing = ingredientesAdicionales.find(i => i.id === id);
             if (ing) total += parseFloat(ing.precio_extra);
         });
-        precioTotalSpan.textContent = `$${total.toFixed(2)}`;
+
+        if (precioTotalSpan) {
+            precioTotalSpan.textContent = `$${total.toFixed(2)}`;
+        }
+    } catch (error) {
+        console.error('Error al calcular precio:', error);
     }
 }
 
-// Confirmar pedido
-async function confirmarPedido() {
+// Agregar al carrito
+async function agregarAlCarrito() {
+    const ingredientesBaseNombres = ingredientesBase.map(ing => ing.nombre);
+    const ingredientesEliminadosNombres = ingredientesBase
+        .filter(ing => ingredientesEliminados.includes(ing.id))
+        .map(ing => ing.nombre);
+    const ingredientesAgregadosNombres = ingredientesAdicionales
+        .filter(ing => ingredientesAgregados.includes(ing.id))
+        .map(ing => ing.nombre);
+
+    const sessionId = localStorage.getItem('carritoSessionId') ||
+        `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem('carritoSessionId', sessionId);
+
+    const itemData = {
+        plato_id: platoActual.id,
+        plato_nombre: platoActual.nombre,
+        plato_precio: parseFloat(precioTotalSpan.textContent.replace('$', '')),
+        ingredientes_originales: ingredientesBaseNombres.join(', '),
+        ingredientes_eliminados: ingredientesEliminadosNombres.join(', ') || 'Ninguno',
+        ingredientes_agregados: ingredientesAgregadosNombres.join(', ') || 'Ninguno',
+        personalizacion_json: {
+            eliminados: ingredientesEliminadosNombres,
+            agregados: ingredientesAgregadosNombres
+        },
+        cantidad: 1
+    };
+
     try {
-        const response = await fetch(`${API_URL}/personalizacion`, {
+        const response = await fetch(`${API_URL}/carrito/agregar`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                plato_id: platoId,
-                ingredientes_eliminados: ingredientesBase
-                    .filter(ing => ingredientesEliminados.includes(ing.id))
-                    .map(ing => ing.nombre),
-                ingredientes_agregados: ingredientesAdicionales
-                    .filter(ing => ingredientesAgregados.includes(ing.id))
-                    .map(ing => ing.nombre),
-                precio_total: parseFloat(precioTotalSpan.textContent.replace('$', ''))
-            })
+            headers: {
+                'Content-Type': 'application/json',
+                'x-session-id': sessionId
+            },
+            body: JSON.stringify(itemData)
         });
 
         const data = await response.json();
 
         if (data.success) {
-            confirmModal.style.display = 'flex';
-        } else {
-            alert('Error al guardar el pedido');
-        }
+            mostrarNotificacion(`${platoActual.nombre} agregado al carrito`);
 
+            if (window.opener) {
+                window.opener.actualizarContadorCarrito();
+            }
+
+            const seguirComprando = confirm('✅ Plato agregado al carrito. ¿Quieres seguir comprando?');
+            if (!seguirComprando) {
+                window.location.href = 'carrito.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        } else {
+            alert('Error al agregar al carrito');
+        }
     } catch (error) {
-        console.error('Error al confirmar pedido:', error);
-        alert('Error al conectar con el servidor');
+        console.error('Error:', error);
+        alert('Error de conexión al servidor');
     }
 }
 
-// Cerrar modal
-closeModal.onclick = () => confirmModal.style.display = 'none';
-seguirComprandoBtn.onclick = () => confirmModal.style.display = 'none';
-window.onclick = (e) => {
-    if (e.target === confirmModal) confirmModal.style.display = 'none';
-};
+// Mostrar notificación
+function mostrarNotificacion(mensaje) {
+    const notificacion = document.createElement('div');
+    notificacion.className = 'notificacion';
+    notificacion.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>${mensaje}</span>
+    `;
+    document.body.appendChild(notificacion);
 
-// Event listener
-confirmarPedidoBtn.addEventListener('click', confirmarPedido);
+    setTimeout(() => {
+        notificacion.classList.add('mostrar');
+        setTimeout(() => {
+            notificacion.classList.remove('mostrar');
+            setTimeout(() => notificacion.remove(), 300);
+        }, 2000);
+    }, 10);
+}
+
+// Configurar botón
+if (confirmarPedidoBtn) {
+    confirmarPedidoBtn.textContent = '🛒 Agregar al Carrito';
+    confirmarPedidoBtn.addEventListener('click', agregarAlCarrito);
+}
 
 // Inicializar
-cargarPlato();
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 DOM cargado, iniciando carga de plato...');
+    cargarPlato();
+});
