@@ -17,6 +17,12 @@
 <body>
 
 <header>
+    <div class="header-flex">
+        <a href="carrito.html" class="cart-icon" id="cartIcon">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count" id="cartCount">0</span>
+        </a>
+    </div>
     <h1>🍽️ Restaurante Delicias</h1>
     <p>Explora nuestro menú con Realidad Aumentada</p>
     <button id="arExperienceBtn" class="ar-btn">
@@ -77,6 +83,8 @@
         <!-- Info del plato -->
         <div class="dish-info-ar" id="dishInfoAR">
             <!-- JS llena aquí con detalles del plato -->
+            <img src="https://placehold.co/300x200/ff8c42/white?text=Modelo+3D" alt="Modelo AR placeholder">
+            <p class="ar-note">*En una implementación real, aquí se usaría <strong>Three.js</strong> o <strong>model-viewer</strong> con modelos 3D.</p>
         </div>
     </div>
 </div>

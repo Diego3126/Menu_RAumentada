@@ -115,7 +115,7 @@ function renderDishes() {
         card.classList.add('dish-card');
 
         // Usar imagen por defecto si no hay imagen_url
-        const imagenUrl = plato.imagen_url || `https://via.placeholder.com/300x160?text=${encodeURIComponent(plato.nombre)}`;
+        const imagenUrl = plato.imagen_url || 'https://placehold.co/400x250/ff8c42/white?text=No+Image';
 
         card.innerHTML = `
             <div class="dish-img" style="background-image: url('${imagenUrl}');"></div>
@@ -212,3 +212,36 @@ window.onclick = (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     cargarPlatos();
 });
+
+// Actualizar contador del carrito
+async function actualizarContadorCarrito() {
+    const cartCount = document.getElementById('cartCount');
+    if (!cartCount) return;
+
+    const sessionId = localStorage.getItem('carritoSessionId');
+    if (!sessionId) {
+        cartCount.textContent = '0';
+        cartCount.style.display = 'none';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/carrito`, {
+            headers: { 'x-session-id': sessionId }
+        });
+        const data = await response.json();
+        const totalItems = data.count || 0;
+        cartCount.textContent = totalItems;
+        cartCount.style.display = totalItems > 0 ? 'inline-block' : 'none';
+    } catch (error) {
+        console.error('Error al actualizar contador:', error);
+    }
+}
+
+// Llamar al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+    actualizarContadorCarrito();
+});
+
+// Exponer función global
+window.actualizarContadorCarrito = actualizarContadorCarrito;
