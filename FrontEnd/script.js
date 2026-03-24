@@ -126,26 +126,84 @@ function renderDishes() {
             </div>
         `;
 
-        // Redirigir a personalización al hacer clic
+        // Agregar click al card para abrir modal de AR o ir a personalización
         card.addEventListener('click', () => {
-            window.location.href = `pedido.html?id=${plato.id}`;
+            // Opción 1: Ir a personalizar (comentado)
+            // window.location.href = `pedido.html?id=${plato.id}`;
+            
+            // Opción 2: Abrir visor 3D en modal (usando GLB temporal)
+            openAR3DViewer(plato);
         });
 
         dishesGrid.appendChild(card);
     });
 }
 
+/**
+ * Abre el modal AR con visor 3D para un plato
+ */
+function openAR3DViewer(plato) {
+    arModal.style.display = 'flex';
+    
+    // Determinar ruta del modelo
+    // Por defecto, busca en carpeta /models con el nombre del plato
+    // Si no existe, usa un placeholder
+    const modelPath = `/models/${sanitizeName(plato.nombre)}.glb` || '/models/default.glb';
+    
+    // Cargar modelo en el visor
+    if (viewer3D) {
+        viewer3D.loadModel(modelPath, {
+            dishId: plato.id,
+            nombre: plato.nombre,
+            descripcion: plato.descripcion,
+            precio: plato.precio,
+            categoria: plato.categoria,
+            ingredientes_base: plato.ingredientes_base
+        });
+    } else {
+        console.warn('Visor 3D no inicializado aún');
+    }
+}
+
+/**
+ * Sanitiza nombres para crear rutas de archivos válidas
+ */
+function sanitizeName(name) {
+    return name
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+}
+
 // ==================== FUNCIONES DE REALIDAD AUMENTADA ====================
 
 // Modal de AR desde botón general
 arExperienceBtn.addEventListener('click', () => {
-    arModal.style.display = 'flex';
+    // Si hay un plato actualmente seleccionado, abrirlo
+    // Si no, mostrar primero del menú
+    if (allPlatos.length > 0) {
+        openAR3DViewer(allPlatos[0]);
+    } else {
+        arModal.style.display = 'flex';
+    }
 });
 
 // Cerrar modal AR
-closeArModalSpan.onclick = () => arModal.style.display = 'none';
+closeArModalSpan.onclick = () => {
+    arModal.style.display = 'none';
+    if (viewer3D) {
+        viewer3D.reset();
+    }
+};
+
 window.onclick = (e) => {
-    if (e.target === arModal) arModal.style.display = 'none';
+    if (e.target === arModal) {
+        arModal.style.display = 'none';
+        if (viewer3D) {
+            viewer3D.reset();
+        }
+    }
 };
 
 // ==================== INICIALIZACIÓN ====================

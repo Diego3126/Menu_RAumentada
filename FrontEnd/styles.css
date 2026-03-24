@@ -470,10 +470,237 @@ main {
     color: white;
 }
 
+/* ========== ESTILOS VISOR 3D ========== */
+
+/* Contenedor del visor 3D */
+.viewer-3d-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+    border-radius: 1rem;
+    overflow: hidden;
+    margin: 1.5rem 0;
+    border: 1px solid #ddd;
+}
+
+.viewer-3d-container canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Indicador de carga */
+#viewer3D-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    z-index: 10;
+}
+
+/* Controles del visor */
+.viewer-controls {
+    background: #f9f9f9;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid #e0e0e0;
+    margin: 1rem 0;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.control-group:last-child {
+    margin-bottom: 0;
+}
+
+.control-group label {
+    font-weight: 600;
+    color: #333;
+    min-width: 100px;
+}
+
+.control-slider {
+    flex: 1;
+    min-width: 150px;
+    height: 6px;
+    border-radius: 3px;
+    background: #ddd;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.control-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ff8c42;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.control-slider::-webkit-slider-thumb:hover {
+    background: #E07832;
+}
+
+.control-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ff8c42;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s;
+}
+
+.control-slider::-moz-range-thumb:hover {
+    background: #E07832;
+}
+
+#scaleValue {
+    min-width: 50px;
+    text-align: right;
+    color: #ff8c42;
+    font-weight: 600;
+}
+
+.control-btn {
+    padding: 0.6rem 1rem;
+    background: #ff8c42;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-btn:hover {
+    background: #E07832;
+}
+
+.control-btn:active {
+    transform: scale(0.98);
+}
+
+.control-btn.active {
+    background: #2ecc71;
+}
+
+/* Tips de controles */
+.viewer-controls .control-tips {
+    background: #FFF3E0;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid #ff8c42;
+    margin-top: 1rem;
+}
+
+.control-tips p {
+    margin: 0;
+    color: #333;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Info del plato en modal AR */
+.dish-info-ar {
+    background: #f5f5f5;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    margin-top: 1rem;
+    border: 1px solid #e0e0e0;
+}
+
+.dish-detail {
+    text-align: left;
+    color: #333;
+}
+
+.dish-detail p {
+    margin: 0.5rem 0;
+    font-size: 0.95rem;
+}
+
+.ingredients-list {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #ddd;
+}
+
+.ingredients-list strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.ingredients-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ingredients-list li {
+    padding: 0.3rem 0;
+    padding-left: 1rem;
+    position: relative;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.ingredients-list li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #2ecc71;
+    font-weight: bold;
+}
+
+/* Modal 3D responsivo */
+@media (max-width: 900px) {
+    .ar-content {
+        max-width: 90%;
+    }
+    
+    .viewer-3d-container {
+        height: 300px;
+    }
+    
+    .control-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .control-label {
+        width: 100%;
+    }
+}
+
 @media (max-width: 768px) {
     .ingredientes-grid {
         grid-template-columns: 1fr;
-    }
 
     .back-btn {
         position: static;
