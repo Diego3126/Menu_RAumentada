@@ -115,7 +115,7 @@ function renderDishes() {
         card.classList.add('dish-card');
 
         // Usar imagen por defecto si no hay imagen_url
-        const imagenUrl = plato.imagen_url || `https://via.placeholder.com/300x160?text=${encodeURIComponent(plato.nombre)}`;
+        const imagenUrl = plato.imagen_url || 'https://placehold.co/400x250/ff8c42/white?text=No+Image';
 
         card.innerHTML = `
             <div class="dish-img" style="background-image: url('${imagenUrl}');"></div>
@@ -126,26 +126,84 @@ function renderDishes() {
             </div>
         `;
 
-        // Redirigir a personalización al hacer clic
+        // Agregar click al card para abrir modal de AR o ir a personalización
         card.addEventListener('click', () => {
-            window.location.href = `pedido.html?id=${plato.id}`;
+            // Opción 1: Ir a personalizar (comentado)
+            // window.location.href = `pedido.html?id=${plato.id}`;
+            
+            // Opción 2: Abrir visor 3D en modal (usando GLB temporal)
+            openAR3DViewer(plato);
         });
 
         dishesGrid.appendChild(card);
     });
 }
 
+/**
+ * Abre el modal AR con visor 3D para un plato
+ */
+function openAR3DViewer(plato) {
+    arModal.style.display = 'flex';
+    
+    // Determinar ruta del modelo
+    // Por defecto, busca en carpeta /models con el nombre del plato
+    // Si no existe, usa un placeholder
+    const modelPath = `/models/${sanitizeName(plato.nombre)}.glb` || '/models/default.glb';
+    
+    // Cargar modelo en el visor
+    if (viewer3D) {
+        viewer3D.loadModel(modelPath, {
+            dishId: plato.id,
+            nombre: plato.nombre,
+            descripcion: plato.descripcion,
+            precio: plato.precio,
+            categoria: plato.categoria,
+            ingredientes_base: plato.ingredientes_base
+        });
+    } else {
+        console.warn('Visor 3D no inicializado aún');
+    }
+}
+
+/**
+ * Sanitiza nombres para crear rutas de archivos válidas
+ */
+function sanitizeName(name) {
+    return name
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+}
+
 // ==================== FUNCIONES DE REALIDAD AUMENTADA ====================
 
 // Modal de AR desde botón general
 arExperienceBtn.addEventListener('click', () => {
-    arModal.style.display = 'flex';
+    // Si hay un plato actualmente seleccionado, abrirlo
+    // Si no, mostrar primero del menú
+    if (allPlatos.length > 0) {
+        openAR3DViewer(allPlatos[0]);
+    } else {
+        arModal.style.display = 'flex';
+    }
 });
 
 // Cerrar modal AR
-closeArModalSpan.onclick = () => arModal.style.display = 'none';
+closeArModalSpan.onclick = () => {
+    arModal.style.display = 'none';
+    if (viewer3D) {
+        viewer3D.reset();
+    }
+};
+
 window.onclick = (e) => {
-    if (e.target === arModal) arModal.style.display = 'none';
+    if (e.target === arModal) {
+        arModal.style.display = 'none';
+        if (viewer3D) {
+            viewer3D.reset();
+        }
+    }
 };
 
 // ==================== INICIALIZACIÓN ====================
@@ -154,3 +212,36 @@ window.onclick = (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     cargarPlatos();
 });
+
+// Actualizar contador del carrito
+async function actualizarContadorCarrito() {
+    const cartCount = document.getElementById('cartCount');
+    if (!cartCount) return;
+
+    const sessionId = localStorage.getItem('carritoSessionId');
+    if (!sessionId) {
+        cartCount.textContent = '0';
+        cartCount.style.display = 'none';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/carrito`, {
+            headers: { 'x-session-id': sessionId }
+        });
+        const data = await response.json();
+        const totalItems = data.count || 0;
+        cartCount.textContent = totalItems;
+        cartCount.style.display = totalItems > 0 ? 'inline-block' : 'none';
+    } catch (error) {
+        console.error('Error al actualizar contador:', error);
+    }
+}
+
+// Llamar al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+    actualizarContadorCarrito();
+});
+
+// Exponer función global
+window.actualizarContadorCarrito = actualizarContadorCarrito;
