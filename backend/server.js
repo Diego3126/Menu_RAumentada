@@ -6,6 +6,7 @@ require('dotenv').config();
 const platosRoutes = require('./routes/platos');
 const personalizacionRoutes = require('./routes/personalizacion');
 const carritoRoutes = require('./routes/carrito');
+const pedidosRoutes = require('./routes/pedidos');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +22,7 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 app.use('/api/platos', platosRoutes);
 app.use('/api/personalizacion', personalizacionRoutes);
 app.use('/api/carrito', carritoRoutes);
+app.use('/api/pedidos', pedidosRoutes);
 
 // Ruta principal
 app.get('/', (req, res) => {
