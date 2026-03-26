@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mi Carrito - Restaurante AR</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+<header>
+    <div class="header-flex">
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Seguir comprando
+        </a>
+        <h1>🛒 Mi Carrito</h1>
+        <div></div> <!-- Espaciador -->
+    </div>
+    <p>Revisa y modifica tu pedido</p>
+</header>
+
+<main class="carrito-container">
+    <!-- Lista de items del carrito -->
+    <div class="carrito-items" id="carritoItems">
+        <div class="loading-spinner">Cargando carrito...</div>
+    </div>
+
+    <!-- Resumen del pedido -->
+    <div class="resumen-pedido">
+        <h3>Resumen del pedido</h3>
+        <div class="resumen-lista">
+            <div class="resumen-item">
+                <span>Subtotal:</span>
+                <span id="subtotal">$0.00</span>
+            </div>
+            <div class="resumen-item">
+                <span>Envío:</span>
+                <span>Gratis</span>
+            </div>
+            <div class="resumen-item total">
+                <span>Total:</span>
+                <span id="total">$0.00</span>
+            </div>
+        </div>
+        <button id="vaciarCarritoBtn" class="vaciar-btn">
+            <i class="fas fa-trash-alt"></i> Vaciar carrito
+        </button>
+        <button id="continuarPedidoBtn" class="confirmar-btn">
+            <i class="fas fa-arrow-right"></i> Continuar con el pedido
+        </button>
+    </div>
+</main>
+
+<!-- Modal de confirmación para vaciar carrito -->
+<div id="vaciarModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ff9800; margin-bottom: 1rem;"></i>
+        <h3>¿Vaciar carrito?</h3>
+        <p>¿Estás seguro de que quieres eliminar todos los items del carrito?</p>
+        <div class="modal-buttons">
+            <button id="confirmarVaciarBtn" class="btn-danger">Sí, vaciar</button>
+            <button id="cancelarVaciarBtn" class="btn-secondary">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script src="carrito.js"></script>
+</body>
+</html>
