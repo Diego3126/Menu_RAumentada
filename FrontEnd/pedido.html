@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 <header>
@@ -75,8 +77,51 @@
         <button id="confirmarPedidoBtn" class="confirmar-btn">
             <i class="fas fa-check-circle"></i> Confirmar Pedido
         </button>
+        <button id="verRaPedidoBtn" class="confirmar-btn ra-pedido-btn" type="button">
+            <i class="fas fa-camera"></i> Ver en RA
+        </button>
     </div>
 </main>
+
+<!-- Modal de Realidad Aumentada -->
+<div id="arModal" class="modal ar-modal">
+    <div class="modal-content ar-content">
+        <span class="close-ar-modal">&times;</span>
+        <h3>Vista RA - <span id="dishNameAR"></span></h3>
+
+        <div id="viewer3D-container" class="viewer-3d-container with-camera">
+            <video id="arCameraPreview" class="ar-camera-preview" autoplay playsinline muted></video>
+            <canvas id="viewer3D-canvas"></canvas>
+            <div id="viewer3D-loading" class="loading-spinner">Cargando modelo 3D...</div>
+        </div>
+
+        <div class="viewer-controls">
+            <div class="control-group">
+                <label for="cameraSelect">Cámara:</label>
+                <select id="cameraSelect" class="camera-select"></select>
+                <button id="refreshCamerasBtn" class="control-btn control-btn-small" type="button">
+                    <i class="fas fa-rotate"></i> Actualizar
+                </button>
+            </div>
+            <div class="control-group">
+                <label>Escala:</label>
+                <input type="range" id="scaleSlider" min="0.5" max="3" step="0.1" value="1" class="control-slider">
+                <span id="scaleValue">1.0x</span>
+            </div>
+            <div class="control-group">
+                <label>Rotación Automática:</label>
+                <button id="autoRotateToggle" class="control-btn">
+                    <i class="fas fa-sync"></i> Activar
+                </button>
+            </div>
+            <div class="control-tips">
+                <p><i class="fas fa-mouse"></i> Arrastra para rotar | <i class="fas fa-scroll"></i> Scroll para zoom</p>
+            </div>
+        </div>
+
+        <div class="dish-info-ar" id="dishInfoAR"></div>
+    </div>
+</div>
 
 <!-- Modal de confirmación -->
 <div id="confirmModal" class="modal">
@@ -91,6 +136,7 @@
     </div>
 </div>
 
+<script src="3d-viewer.js"></script>
 <script src="pedido.js"></script>
 </body>
 </html>

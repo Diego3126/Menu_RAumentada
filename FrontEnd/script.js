@@ -126,13 +126,9 @@ function renderDishes() {
             </div>
         `;
 
-        // Agregar click al card para abrir modal de AR o ir a personalización
+        // Al elegir un plato, abrir el flujo de pedido/personalización existente
         card.addEventListener('click', () => {
-            // Opción 1: Ir a personalizar (comentado)
-            // window.location.href = `pedido.html?id=${plato.id}`;
-            
-            // Opción 2: Abrir visor 3D en modal (usando GLB temporal)
-            openAR3DViewer(plato);
+            window.location.href = `pedido.html?id=${plato.id}`;
         });
 
         dishesGrid.appendChild(card);

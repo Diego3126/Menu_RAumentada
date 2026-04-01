@@ -36,6 +36,15 @@ const ingredientesEliminadosSpan = document.getElementById('ingredientesEliminad
 const ingredientesAgregadosSpan = document.getElementById('ingredientesAgregados');
 const precioTotalSpan = document.getElementById('precioTotal');
 const confirmarPedidoBtn = document.getElementById('confirmarPedidoBtn');
+const verRaPedidoBtn = document.getElementById('verRaPedidoBtn');
+const arModal = document.getElementById('arModal');
+const closeArModalSpan = document.querySelector('.close-ar-modal');
+const arCameraPreview = document.getElementById('arCameraPreview');
+const cameraSelect = document.getElementById('cameraSelect');
+const refreshCamerasBtn = document.getElementById('refreshCamerasBtn');
+
+let arCameraStream = null;
+let selectedCameraId = localStorage.getItem('raSelectedCameraId') || '';
 
 console.log('📦 Elementos DOM verificados');
 
@@ -265,6 +274,136 @@ async function agregarAlCarrito() {
     }
 }
 
+function sanitizeName(name = '') {
+    return name
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+}
+
+async function cargarCamarasDisponibles() {
+    if (!cameraSelect || !navigator.mediaDevices?.enumerateDevices) {
+        return;
+    }
+
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter(device => device.kind === 'videoinput');
+
+        cameraSelect.innerHTML = '';
+
+        if (cameras.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No hay cámaras disponibles';
+            cameraSelect.appendChild(option);
+            cameraSelect.disabled = true;
+            return;
+        }
+
+        cameraSelect.disabled = false;
+
+        cameras.forEach((camera, index) => {
+            const option = document.createElement('option');
+            option.value = camera.deviceId;
+            option.textContent = camera.label || `Cámara ${index + 1}`;
+            cameraSelect.appendChild(option);
+        });
+
+        const hasSelected = cameras.some(camera => camera.deviceId === selectedCameraId);
+        if (!hasSelected) {
+            selectedCameraId = cameras[0].deviceId;
+        }
+
+        cameraSelect.value = selectedCameraId;
+    } catch (error) {
+        console.error('No se pudieron listar las cámaras:', error);
+    }
+}
+
+async function iniciarCamaraRA(deviceId = selectedCameraId) {
+    if (!arCameraPreview || !navigator.mediaDevices?.getUserMedia) {
+        return;
+    }
+
+    if (arCameraStream) {
+        detenerCamaraRA();
+    }
+
+    try {
+        const videoConstraint = deviceId
+            ? { deviceId: { exact: deviceId } }
+            : { facingMode: { ideal: 'environment' } };
+
+        arCameraStream = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraint,
+            audio: false
+        });
+        arCameraPreview.srcObject = arCameraStream;
+
+        const activeTrack = arCameraStream.getVideoTracks()[0];
+        const activeDeviceId = activeTrack?.getSettings?.().deviceId;
+        if (activeDeviceId) {
+            selectedCameraId = activeDeviceId;
+            localStorage.setItem('raSelectedCameraId', selectedCameraId);
+        }
+
+        await cargarCamarasDisponibles();
+    } catch (error) {
+        console.error('No se pudo acceder a la camara:', error);
+        alert('No se pudo encender la camara. Revisa los permisos del navegador.');
+    }
+}
+
+function detenerCamaraRA() {
+    if (!arCameraStream) return;
+
+    arCameraStream.getTracks().forEach(track => track.stop());
+    arCameraStream = null;
+    if (arCameraPreview) {
+        arCameraPreview.srcObject = null;
+    }
+}
+
+async function abrirRaDelPlato() {
+    if (!platoActual || !arModal) {
+        alert('Todavia no se ha cargado el plato. Intenta de nuevo en unos segundos.');
+        return;
+    }
+
+    arModal.style.display = 'flex';
+    await iniciarCamaraRA(selectedCameraId);
+
+    const modelPath = `/models/${sanitizeName(platoActual.nombre)}.glb`;
+
+    if (viewer3D) {
+        if (viewer3D.scene) {
+            viewer3D.scene.background = null;
+        }
+        if (viewer3D.renderer) {
+            viewer3D.renderer.setClearColor(0x000000, 0);
+        }
+
+        viewer3D.loadModel(modelPath, {
+            dishId: platoActual.id,
+            nombre: platoActual.nombre,
+            descripcion: platoActual.descripcion,
+            precio: parseFloat(platoActual.precio),
+            categoria: platoActual.categoria,
+            ingredientes_base: ingredientesBase
+        });
+    }
+}
+
+async function cambiarCamara() {
+    if (!cameraSelect) return;
+
+    selectedCameraId = cameraSelect.value;
+    localStorage.setItem('raSelectedCameraId', selectedCameraId);
+    await iniciarCamaraRA(selectedCameraId);
+}
+
 // Mostrar notificación
 function mostrarNotificacion(mensaje) {
     const notificacion = document.createElement('div');
@@ -289,6 +428,50 @@ if (confirmarPedidoBtn) {
     confirmarPedidoBtn.textContent = '🛒 Agregar al Carrito';
     confirmarPedidoBtn.addEventListener('click', agregarAlCarrito);
 }
+
+if (verRaPedidoBtn) {
+    verRaPedidoBtn.addEventListener('click', abrirRaDelPlato);
+}
+
+if (cameraSelect) {
+    cameraSelect.addEventListener('change', cambiarCamara);
+}
+
+if (refreshCamerasBtn) {
+    refreshCamerasBtn.addEventListener('click', cargarCamarasDisponibles);
+}
+
+if (navigator.mediaDevices?.addEventListener) {
+    navigator.mediaDevices.addEventListener('devicechange', () => {
+        if (arModal?.style.display === 'flex') {
+            cargarCamarasDisponibles();
+        }
+    });
+}
+
+if (closeArModalSpan) {
+    closeArModalSpan.onclick = () => {
+        arModal.style.display = 'none';
+        detenerCamaraRA();
+        if (viewer3D) {
+            viewer3D.reset();
+        }
+    };
+}
+
+window.addEventListener('click', (e) => {
+    if (e.target === arModal) {
+        arModal.style.display = 'none';
+        detenerCamaraRA();
+        if (viewer3D) {
+            viewer3D.reset();
+        }
+    }
+});
+
+window.addEventListener('beforeunload', () => {
+    detenerCamaraRA();
+});
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {

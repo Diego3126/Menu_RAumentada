@@ -443,6 +443,15 @@ main {
     transform: scale(1.02);
 }
 
+.ra-pedido-btn {
+    margin-top: 0.8rem;
+    background: #2d9cdb;
+}
+
+.ra-pedido-btn:hover {
+    background: #1f83bb;
+}
+
 .modal-buttons {
     display: flex;
     gap: 1rem;
@@ -488,6 +497,25 @@ main {
     display: block;
     width: 100%;
     height: 100%;
+}
+
+.viewer-3d-container.with-camera {
+    background: #101114;
+}
+
+.viewer-3d-container.with-camera .ar-camera-preview {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+.viewer-3d-container.with-camera canvas {
+    position: relative;
+    z-index: 2;
+    background: transparent;
 }
 
 /* Indicador de carga */
@@ -1044,4 +1072,25 @@ main {
 
 .notificacion i {
     font-size: 1.2rem;
+}
+
+.control-btn-small {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+.camera-select {
+    flex: 1;
+    min-width: 180px;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #d8d8d8;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    background: #fff;
+    color: #333;
+}
+
+.camera-select:focus {
+    outline: 2px solid rgba(45, 156, 219, 0.25);
+    border-color: #2d9cdb;
 }
