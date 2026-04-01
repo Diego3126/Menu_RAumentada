@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frame-ingest-service
+  labels:
+    app: frame-ingest-service
+spec:
+  type: ClusterIP
+  selector:
+    app: frame-ingest-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5301

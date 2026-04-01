@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: plane-detection-service
+  version: 1.0.0
+  description: Servicio de deteccion de planos dominantes para AR
+servers:
+  - url: http://localhost:5400
+paths:
+  /health:
+    get:
+      summary: Estado del servicio
+      responses:
+        '200':
+          description: Servicio disponible
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  service:
+                    type: string
+  /api/v1/planes/detect:
+    post:
+      summary: Detectar plano dominante
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaneDetectionRequest'
+      responses:
+        '200':
+          description: Plano detectado o validacion fallida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaneDetectionResponse'
+components:
+  schemas:
+    Point3D:
+      type: object
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+        z:
+          type: number
+      required: [x, y, z]
+    PlaneExtent:
+      type: object
+      properties:
+        width:
+          type: number
+        height:
+          type: number
+      required: [width, height]
+    PlaneDetectionRequest:
+      type: object
+      properties:
+        frame_id:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+        points:
+          type: array
+          minItems: 3
+          items:
+            $ref: '#/components/schemas/Point3D'
+      required: [points]
+    PlaneDetectedEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        position:
+          $ref: '#/components/schemas/Point3D'
+        normal:
+          $ref: '#/components/schemas/Point3D'
+        extent:
+          $ref: '#/components/schemas/PlaneExtent'
+        confidence:
+          type: number
+        type:
+          type: string
+          enum: [horizontal, vertical]
+        frame_id:
+          type: string
+          nullable: true
+        inlier_count:
+          type: integer
+        point_count:
+          type: integer
+      required: [id, timestamp, position, normal, extent, confidence, type, inlier_count, point_count]
+    PlaneDetectionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PlaneDetectedEvent'
+      required: [success, message]

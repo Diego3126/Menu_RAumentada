@@ -1,5 +1,5 @@
-// Configuración de la API
-const API_URL = 'http://localhost:3000/api';
+// Configuración de la API (mismo origen para soportar túneles públicos)
+const API_URL = '/api';
 
 // Variables globales
 let allPlatos = [];           // Todos los platos desde la API
@@ -12,6 +12,7 @@ const dishesGrid = document.getElementById('dishesGrid');
 const arModal = document.getElementById('arModal');
 const closeArModalSpan = document.querySelector('.close-ar-modal');
 const arExperienceBtn = document.getElementById('arExperienceBtn');
+const TEST_MODEL_PATH = '/models/ensalada-cesar.glb';
 
 // ==================== FUNCIONES PARA CARGAR DATOS ====================
 
@@ -141,13 +142,14 @@ function renderDishes() {
 function openAR3DViewer(plato) {
     arModal.style.display = 'flex';
     
-    // Determinar ruta del modelo
-    // Por defecto, busca en carpeta /models con el nombre del plato
-    // Si no existe, usa un placeholder
-    const modelPath = `/models/${sanitizeName(plato.nombre)}.glb` || '/models/default.glb';
+    const modelPath = resolveModelPath(plato.nombre);
     
     // Cargar modelo en el visor
     if (viewer3D) {
+        requestAnimationFrame(() => {
+            viewer3D.onWindowResize();
+        });
+
         viewer3D.loadModel(modelPath, {
             dishId: plato.id,
             nombre: plato.nombre,
@@ -159,6 +161,19 @@ function openAR3DViewer(plato) {
     } else {
         console.warn('Visor 3D no inicializado aún');
     }
+}
+
+function resolveModelPath(nombrePlato) {
+    const displayName = (nombrePlato || '').trim().toLowerCase();
+    const normalizedName = sanitizeName((nombrePlato || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, ''));
+
+    if (displayName.includes('ensalada césar') || normalizedName.includes('ensalada-cesar') || normalizedName.includes('caesar-salad')) {
+        return TEST_MODEL_PATH;
+    }
+
+    return `/models/${normalizedName}.glb`;
 }
 
 /**

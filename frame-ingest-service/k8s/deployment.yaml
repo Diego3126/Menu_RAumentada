@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frame-ingest-service
+  labels:
+    app: frame-ingest-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frame-ingest-service
+  template:
+    metadata:
+      labels:
+        app: frame-ingest-service
+    spec:
+      containers:
+        - name: frame-ingest-service
+          image: your-dockerhub/frame-ingest-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5301
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "5301"
+            - name: MAX_FRAME_BYTES
+              value: "8388608"
+            - name: NATS_URL
+              value: "nats://nats.default.svc.cluster.local:4222"
+            - name: NATS_SUBJECT
+              value: "frames.raw"
+            - name: CORS_ORIGINS
+              value: "*"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20

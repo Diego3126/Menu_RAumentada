@@ -1,0 +1,50 @@
+openapi: 3.1.0
+info:
+  title: feature-detection-service
+  version: 1.0.0
+servers:
+  - url: http://localhost:5200
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Ok
+  /api/v1/features/detect:
+    post:
+      summary: Detect features from a camera frame
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FrameFeatureRequest'
+      responses:
+        '200':
+          description: Features detected
+        '400':
+          description: Invalid frame
+components:
+  schemas:
+    FrameFeatureRequest:
+      type: object
+      required: [image_base64]
+      properties:
+        frame_id:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+        image_base64:
+          type: string
+        mime_type:
+          type: string
+        source:
+          type: string
+          nullable: true
+        detector:
+          type: string
+          enum: [orb, harris]

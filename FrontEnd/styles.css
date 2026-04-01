@@ -635,6 +635,17 @@ main {
     background: #2ecc71;
 }
 
+.feature-detection-status {
+    margin-top: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 0.8rem;
+    background: #eef6ff;
+    color: #1d4f91;
+    border: 1px solid #cfe0ff;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
 /* Tips de controles */
 .viewer-controls .control-tips {
     background: #FFF3E0;

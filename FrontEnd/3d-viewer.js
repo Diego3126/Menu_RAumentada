@@ -1,7 +1,6 @@
 /**
  * VISOR 3D INTERACTIVO - Three.js
  * Carga y visualiza modelos GLB/GLTF con rotación interactiva
- * Integración con RA-Service para obtener modelos 3D de platos
  */
 
 class Viewer3D {
@@ -14,6 +13,12 @@ class Viewer3D {
         this.autoRotate = false;
         this.scale = 1;
         this.isLoading = false;
+        this.fittedScale = 1;
+        this.surfaceAnchor = { x: 0, y: -0.35, spread: 0.06, confidence: 0 };
+        this.prevFeatureCentroid = null;
+        this.prevFeatureSpread = null;
+        this.anchorSmoothing = 0.18;
+        this.maxAnchorStep = 0.085;
         
         // Elementos del DOM
         this.canvasElement = document.getElementById('viewer3D-canvas');
@@ -122,10 +127,8 @@ class Viewer3D {
         if (!this.mouseDown || !this.model) return;
 
         const deltaX = e.clientX - this.mouseX;
-        const deltaY = e.clientY - this.mouseY;
 
         this.targetRotationY += deltaX * 0.005;
-        this.targetRotationX += deltaY * 0.005;
 
         this.mouseX = e.clientX;
         this.mouseY = e.clientY;
@@ -148,10 +151,8 @@ class Viewer3D {
 
         const touch = e.touches[0];
         const deltaX = touch.clientX - this.mouseX;
-        const deltaY = touch.clientY - this.mouseY;
 
         this.targetRotationY += deltaX * 0.005;
-        this.targetRotationX += deltaY * 0.005;
 
         this.mouseX = touch.clientX;
         this.mouseY = touch.clientY;
@@ -163,13 +164,7 @@ class Viewer3D {
 
     onMouseWheel(e) {
         e.preventDefault();
-        if (!this.model) return;
-
-        const zoomSpeed = 0.1;
-        const direction = e.deltaY > 0 ? 1 : -1;
-        
-        this.camera.position.z += direction * zoomSpeed;
-        this.camera.position.z = Math.max(1, Math.min(10, this.camera.position.z));
+        // Interacción restringida a rotación horizontal.
     }
 
     /**
@@ -181,7 +176,8 @@ class Viewer3D {
             this.scale = parseFloat(e.target.value);
             this.scaleValue.textContent = this.scale.toFixed(1) + 'x';
             if (this.model) {
-                this.model.scale.set(this.scale, this.scale, this.scale);
+                this.fitModelToView();
+                this.placeModelOnSurface();
             }
         });
 
@@ -196,7 +192,7 @@ class Viewer3D {
     }
 
     /**
-     * Carga un modelo GLB desde URL o desde RA-Service
+     * Carga un modelo GLB desde una ruta local o remota.
      * @param {string} modelPath - Ruta del modelo o ID de plato
      * @param {object} dishData - Datos del plato
      */
@@ -204,29 +200,7 @@ class Viewer3D {
         this.toggleLoading(true);
 
         try {
-            // Intenta cargar desde RA-Service primero
-            let finalModelPath = modelPath;
-
-            if (dishData.dishId && !modelPath.includes('http')) {
-                try {
-                    const raResponse = await fetch('http://localhost:5300/api/ra/session', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            dishId: dishData.dishId,
-                            fallbackModelPath: modelPath || '/models/default.glb'
-                        })
-                    });
-
-                    if (raResponse.ok) {
-                        const raData = await raResponse.json();
-                        finalModelPath = raData.data?.modelUrl || raData.data?.modelPath || modelPath;
-                        console.log('Modelo cargado desde RA-Service:', finalModelPath);
-                    }
-                } catch (raError) {
-                    console.warn('RA-Service no disponible, usando ruta local', raError);
-                }
-            }
+            const finalModelPath = modelPath || '/models/default.glb';
 
             // Cargar modelo con GLTFLoader
             const loader = new THREE.GLTFLoader();
@@ -260,6 +234,9 @@ class Viewer3D {
         const center = box.getCenter(new THREE.Vector3());
         this.model.position.sub(center);
 
+        this.fitModelToView();
+        this.placeModelOnSurface();
+
         // Agregar sombras
         this.model.traverse((node) => {
             if (node.isMesh) {
@@ -281,6 +258,144 @@ class Viewer3D {
         this.targetRotationY = 0;
 
         console.log('Modelo cargado:', dishData.nombre || 'Desconocido');
+    }
+
+    fitModelToView() {
+        if (!this.model) return;
+
+        const box = new THREE.Box3().setFromObject(this.model);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDimension = Math.max(size.x, size.y, size.z);
+        if (!maxDimension || maxDimension <= 0) return;
+
+        const targetDimension = 1.15;
+        const fitScale = targetDimension / maxDimension;
+        this.fittedScale = fitScale;
+        this.applyAnchorScale();
+    }
+
+    placeModelOnSurface() {
+        if (!this.model) return;
+
+        // Coloca el modelo cerca de la superficie estimada por keypoints.
+        const box = new THREE.Box3().setFromObject(this.model);
+        const anchor = this.surfaceAnchor || { x: 0, y: -0.35 };
+
+        const horizontalSpan = 1.35;
+        const verticalSpan = 1.15;
+        const desiredGroundY = anchor.y * verticalSpan;
+
+        this.model.position.x = anchor.x * horizontalSpan;
+        this.model.position.y += desiredGroundY - box.min.y;
+        this.model.position.z = 0;
+    }
+
+    applyAnchorScale() {
+        if (!this.model) return;
+
+        const anchor = this.surfaceAnchor || { y: -0.35, spread: 0.06 };
+        const perspectiveBoost = 1 + Math.max(-0.2, Math.min(0.45, (-anchor.y - 0.1) * 0.4));
+        const spreadBoost = 1 + Math.max(-0.25, Math.min(0.55, ((anchor.spread || 0.06) - 0.04) * 8));
+
+        const finalScale = this.fittedScale * this.scale * perspectiveBoost * spreadBoost;
+        this.model.scale.set(finalScale, finalScale, finalScale);
+    }
+
+    updateSurfaceAnchorFromFeatures(keypoints = [], imageWidth = 0, imageHeight = 0) {
+        if (!Array.isArray(keypoints) || keypoints.length < 6 || !imageWidth || !imageHeight) {
+            return false;
+        }
+
+        const lowerHalf = keypoints.filter((kp) => kp.y > imageHeight * 0.45);
+        const sample = lowerHalf.length >= 8 ? lowerHalf : keypoints;
+        if (sample.length < 6) {
+            return false;
+        }
+
+        const xs = sample.map((kp) => kp.x).sort((a, b) => a - b);
+        const ys = sample.map((kp) => kp.y).sort((a, b) => a - b);
+        const mid = Math.floor(sample.length / 2);
+        const medianX = xs[mid];
+        const medianY = ys[mid];
+
+        const meanX = sample.reduce((acc, kp) => acc + kp.x, 0) / sample.length;
+        const meanY = sample.reduce((acc, kp) => acc + kp.y, 0) / sample.length;
+        const variance = sample.reduce((acc, kp) => {
+            const dx = kp.x - meanX;
+            const dy = kp.y - meanY;
+            return acc + dx * dx + dy * dy;
+        }, 0) / sample.length;
+        const spread = Math.sqrt(variance) / Math.max(imageWidth, imageHeight);
+
+        const normalizedX = (medianX / imageWidth) * 2 - 1;
+        const normalizedY = -((medianY / imageHeight) * 2 - 1);
+        const measuredAnchor = {
+            x: Math.max(-0.85, Math.min(0.85, normalizedX)),
+            y: Math.max(-0.8, Math.min(0.35, normalizedY - 0.12)),
+            spread: Math.max(0.02, Math.min(0.2, spread)),
+            confidence: Math.max(0, Math.min(1, sample.length / keypoints.length))
+        };
+
+        const centroid = {
+            x: medianX / imageWidth,
+            y: medianY / imageHeight
+        };
+
+        let predictedAnchor = { ...measuredAnchor };
+        if (this.prevFeatureCentroid) {
+            const motionX = (centroid.x - this.prevFeatureCentroid.x) * 2;
+            const motionY = -(centroid.y - this.prevFeatureCentroid.y) * 2;
+            predictedAnchor = {
+                ...measuredAnchor,
+                x: this.surfaceAnchor.x + motionX,
+                y: this.surfaceAnchor.y + motionY
+            };
+        }
+
+        const confidenceWeight = 0.35 + measuredAnchor.confidence * 0.45;
+        const blendedTarget = {
+            x: predictedAnchor.x * (1 - confidenceWeight) + measuredAnchor.x * confidenceWeight,
+            y: predictedAnchor.y * (1 - confidenceWeight) + measuredAnchor.y * confidenceWeight,
+            spread: measuredAnchor.spread,
+            confidence: measuredAnchor.confidence
+        };
+
+        this.surfaceAnchor = this.smoothAnchor(blendedTarget);
+        this.prevFeatureCentroid = centroid;
+        this.prevFeatureSpread = spread;
+
+        if (this.model) {
+            this.applyAnchorScale();
+            this.placeModelOnSurface();
+        }
+
+        return true;
+    }
+
+    smoothAnchor(target) {
+        const dx = target.x - this.surfaceAnchor.x;
+        const dy = target.y - this.surfaceAnchor.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        let limitedX = target.x;
+        let limitedY = target.y;
+        if (distance > this.maxAnchorStep) {
+            const ratio = this.maxAnchorStep / distance;
+            limitedX = this.surfaceAnchor.x + dx * ratio;
+            limitedY = this.surfaceAnchor.y + dy * ratio;
+        }
+
+        const alpha = this.anchorSmoothing + (target.confidence * 0.15);
+        const nextX = this.surfaceAnchor.x + (limitedX - this.surfaceAnchor.x) * alpha;
+        const nextY = this.surfaceAnchor.y + (limitedY - this.surfaceAnchor.y) * alpha;
+        const nextSpread = this.surfaceAnchor.spread + (target.spread - this.surfaceAnchor.spread) * 0.25;
+
+        return {
+            x: Math.max(-0.85, Math.min(0.85, nextX)),
+            y: Math.max(-0.8, Math.min(0.35, nextY)),
+            spread: Math.max(0.02, Math.min(0.2, nextSpread)),
+            confidence: target.confidence
+        };
     }
 
     onLoadProgress(progress) {
@@ -314,6 +429,8 @@ class Viewer3D {
         this.model = new THREE.Mesh(geometry, material);
         this.model.castShadow = true;
         this.model.receiveShadow = true;
+        this.fitModelToView();
+        this.placeModelOnSurface();
         
         this.scene.add(this.model);
         this.toggleLoading(false);
@@ -352,8 +469,9 @@ class Viewer3D {
         requestAnimationFrame(this.animate);
 
         if (this.model) {
-            // Rotación manual suave
-            this.model.rotation.x += (this.targetRotationX - this.model.rotation.x) * 0.1;
+            // Mantiene orientación vertical estable para simular objeto fijo en mesa.
+            this.targetRotationX = 0;
+            this.model.rotation.x += (this.targetRotationX - this.model.rotation.x) * 0.18;
             this.model.rotation.y += (this.targetRotationY - this.model.rotation.y) * 0.1;
 
             // Auto-rotate
@@ -371,6 +489,10 @@ class Viewer3D {
     onWindowResize() {
         const width = this.containerElement.clientWidth;
         const height = this.containerElement.clientHeight;
+
+        if (!width || !height) {
+            return;
+        }
 
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
@@ -393,6 +515,10 @@ class Viewer3D {
             this.scene.remove(this.model);
             this.model = null;
         }
+        this.surfaceAnchor = { x: 0, y: -0.35, spread: 0.06, confidence: 0 };
+        this.prevFeatureCentroid = null;
+        this.prevFeatureSpread = null;
+        this.fittedScale = 1;
         this.scaleSlider.value = 1;
         this.scaleValue.textContent = '1.0x';
         this.autoRotate = false;

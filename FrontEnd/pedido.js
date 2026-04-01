@@ -42,9 +42,21 @@ const closeArModalSpan = document.querySelector('.close-ar-modal');
 const arCameraPreview = document.getElementById('arCameraPreview');
 const cameraSelect = document.getElementById('cameraSelect');
 const refreshCamerasBtn = document.getElementById('refreshCamerasBtn');
+const detectPointsBtn = document.getElementById('detectPointsBtn');
+const nativeArBtn = document.getElementById('nativeArBtn');
+const featureDetectionResult = document.getElementById('featureDetectionResult');
+const nativeArViewer = document.getElementById('nativeArViewer');
+const TEST_MODEL_PATH = '/models/ensalada-cesar.glb';
+
+const FEATURE_API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:5200/api/v1/features/detect'
+    : '/api/v1/features/detect';
+const AUTO_DETECT_INTERVAL_MS = 160;
 
 let arCameraStream = null;
 let selectedCameraId = localStorage.getItem('raSelectedCameraId') || '';
+let autoDetectTimer = null;
+let autoDetectInFlight = false;
 
 console.log('📦 Elementos DOM verificados');
 
@@ -372,12 +384,23 @@ async function abrirRaDelPlato() {
         return;
     }
 
+    if (debeUsarARNativo()) {
+        const opened = await abrirARNativo();
+        if (opened) {
+            return;
+        }
+    }
+
     arModal.style.display = 'flex';
     await iniciarCamaraRA(selectedCameraId);
 
-    const modelPath = `/models/${sanitizeName(platoActual.nombre)}.glb`;
+    const modelPath = resolveModelPath(platoActual.nombre);
 
     if (viewer3D) {
+        requestAnimationFrame(() => {
+            viewer3D.onWindowResize();
+        });
+
         if (viewer3D.scene) {
             viewer3D.scene.background = null;
         }
@@ -393,6 +416,172 @@ async function abrirRaDelPlato() {
             categoria: platoActual.categoria,
             ingredientes_base: ingredientesBase
         });
+    }
+
+    if (featureDetectionResult) {
+        featureDetectionResult.textContent = 'Analizando superficie automáticamente en tiempo real...';
+    }
+
+    iniciarDeteccionAutomatica();
+}
+
+function resolveModelPath(nombrePlato) {
+    const displayName = (nombrePlato || '').trim().toLowerCase();
+    const normalizedName = sanitizeName((nombrePlato || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, ''));
+
+    if (displayName.includes('ensalada césar') || normalizedName.includes('ensalada-cesar') || normalizedName.includes('caesar-salad')) {
+        return TEST_MODEL_PATH;
+    }
+
+    return `/models/${normalizedName}.glb`;
+}
+
+function resolveNativeModelAssets(nombrePlato) {
+    const glb = resolveModelPath(nombrePlato);
+    const usdz = glb.replace(/\.glb$/i, '.usdz');
+    return { glb, usdz };
+}
+
+function esMovil() {
+    return /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+}
+
+function debeUsarARNativo() {
+    return esMovil() && nativeArViewer && typeof nativeArViewer.activateAR === 'function';
+}
+
+async function existeArchivo(url) {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+    } catch (_error) {
+        return false;
+    }
+}
+
+async function abrirARNativo() {
+    if (!platoActual || !nativeArViewer) {
+        return false;
+    }
+
+    const assets = resolveNativeModelAssets(platoActual.nombre);
+    nativeArViewer.setAttribute('src', assets.glb);
+
+    const hasUsdz = await existeArchivo(assets.usdz);
+    if (hasUsdz) {
+        nativeArViewer.setAttribute('ios-src', assets.usdz);
+    } else {
+        nativeArViewer.removeAttribute('ios-src');
+    }
+
+    try {
+        await nativeArViewer.activateAR();
+        return true;
+    } catch (error) {
+        console.warn('No se pudo abrir AR nativo, usando fallback web:', error);
+        return false;
+    }
+}
+
+function capturarFrameCamara() {
+    if (!arCameraPreview || !arCameraPreview.videoWidth || !arCameraPreview.videoHeight) {
+        throw new Error('La cámara todavía no está lista');
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = arCameraPreview.videoWidth;
+    canvas.height = arCameraPreview.videoHeight;
+    const context = canvas.getContext('2d');
+    if (!context) {
+        throw new Error('No se pudo crear el contexto de captura');
+    }
+
+    context.drawImage(arCameraPreview, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.92);
+}
+
+async function detectarPuntosEnCamara() {
+    return detectarPuntosEnCamaraCore({ silent: false, fromAuto: false });
+}
+
+async function detectarPuntosEnCamaraCore({ silent = false, fromAuto = false } = {}) {
+    if (autoDetectInFlight) return;
+
+    if (!fromAuto && !detectPointsBtn) return;
+
+    try {
+        autoDetectInFlight = true;
+
+        if (detectPointsBtn && !fromAuto) {
+            detectPointsBtn.disabled = true;
+            detectPointsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando';
+        }
+
+        const imageBase64 = capturarFrameCamara();
+        const response = await fetch(FEATURE_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                frame_id: `camera-${Date.now()}`,
+                source: 'frontend-camera',
+                mime_type: 'image/jpeg',
+                detector: 'orb',
+                image_base64: imageBase64
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || data.detail || 'No fue posible detectar puntos');
+        }
+
+        const featureCount = data.data?.total_features ?? 0;
+        const detector = data.data?.detector ?? 'orb';
+        const keypoints = data.data?.keypoints || [];
+        const imageWidth = data.data?.image_width || 0;
+        const imageHeight = data.data?.image_height || 0;
+
+        if (viewer3D && typeof viewer3D.updateSurfaceAnchorFromFeatures === 'function') {
+            viewer3D.updateSurfaceAnchorFromFeatures(keypoints, imageWidth, imageHeight);
+        }
+
+        if (featureDetectionResult) {
+            featureDetectionResult.textContent = `Detector ${detector.toUpperCase()}: ${featureCount} puntos detectados. Anclaje en tiempo real activo.`;
+        }
+    } catch (error) {
+        console.error('Error detectando puntos en cámara:', error);
+        if (featureDetectionResult) {
+            featureDetectionResult.textContent = `Error al detectar puntos: ${error.message}`;
+        }
+        if (!silent && !fromAuto) {
+            alert(`No se pudieron detectar puntos: ${error.message}`);
+        }
+    } finally {
+        autoDetectInFlight = false;
+
+        if (detectPointsBtn && !fromAuto) {
+            detectPointsBtn.disabled = false;
+            detectPointsBtn.innerHTML = '<i class="fas fa-crosshairs"></i> Detectar';
+        }
+    }
+}
+
+function iniciarDeteccionAutomatica() {
+    detenerDeteccionAutomatica();
+
+    detectarPuntosEnCamaraCore({ silent: true, fromAuto: true });
+    autoDetectTimer = setInterval(() => {
+        if (!arModal || arModal.style.display !== 'flex') return;
+        detectarPuntosEnCamaraCore({ silent: true, fromAuto: true });
+    }, AUTO_DETECT_INTERVAL_MS);
+}
+
+function detenerDeteccionAutomatica() {
+    if (autoDetectTimer) {
+        clearInterval(autoDetectTimer);
+        autoDetectTimer = null;
     }
 }
 
@@ -441,6 +630,20 @@ if (refreshCamerasBtn) {
     refreshCamerasBtn.addEventListener('click', cargarCamarasDisponibles);
 }
 
+if (detectPointsBtn) {
+    detectPointsBtn.style.display = 'none';
+    detectPointsBtn.addEventListener('click', detectarPuntosEnCamara);
+}
+
+if (nativeArBtn) {
+    nativeArBtn.addEventListener('click', async () => {
+        const opened = await abrirARNativo();
+        if (!opened) {
+            alert('ARCore/ARKit no está disponible en este dispositivo o navegador. Se usará modo web.');
+        }
+    });
+}
+
 if (navigator.mediaDevices?.addEventListener) {
     navigator.mediaDevices.addEventListener('devicechange', () => {
         if (arModal?.style.display === 'flex') {
@@ -452,6 +655,7 @@ if (navigator.mediaDevices?.addEventListener) {
 if (closeArModalSpan) {
     closeArModalSpan.onclick = () => {
         arModal.style.display = 'none';
+        detenerDeteccionAutomatica();
         detenerCamaraRA();
         if (viewer3D) {
             viewer3D.reset();
@@ -462,6 +666,7 @@ if (closeArModalSpan) {
 window.addEventListener('click', (e) => {
     if (e.target === arModal) {
         arModal.style.display = 'none';
+        detenerDeteccionAutomatica();
         detenerCamaraRA();
         if (viewer3D) {
             viewer3D.reset();
@@ -470,6 +675,7 @@ window.addEventListener('click', (e) => {
 });
 
 window.addEventListener('beforeunload', () => {
+    detenerDeteccionAutomatica();
     detenerCamaraRA();
 });
 

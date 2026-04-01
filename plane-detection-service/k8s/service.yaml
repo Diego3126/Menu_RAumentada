@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: plane-detection-service
+  labels:
+    app: plane-detection-service
+spec:
+  type: ClusterIP
+  selector:
+    app: plane-detection-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5400

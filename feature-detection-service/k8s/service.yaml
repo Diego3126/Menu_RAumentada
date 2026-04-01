@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: feature-detection-service
+  labels:
+    app: feature-detection-service
+spec:
+  type: ClusterIP
+  selector:
+    app: feature-detection-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5200

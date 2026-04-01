@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plane-detection-service
+  labels:
+    app: plane-detection-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: plane-detection-service
+  template:
+    metadata:
+      labels:
+        app: plane-detection-service
+    spec:
+      containers:
+        - name: plane-detection-service
+          image: your-dockerhub/plane-detection-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5400
+              name: http
+          env:
+            - name: PORT
+              value: "5400"
+            - name: RANSAC_ITERATIONS
+              value: "200"
+            - name: RANSAC_DISTANCE_THRESHOLD
+              value: "0.015"
+            - name: MIN_PLANE_POINTS
+              value: "60"
+            - name: MIN_PLANE_AREA_M2
+              value: "0.3"
+            - name: MIN_CONFIDENCE
+              value: "0.85"
+            - name: HORIZONTAL_TOLERANCE_DEG
+              value: "15"
+            - name: VERTICAL_TOLERANCE_DEG
+              value: "15"
+            - name: VOXEL_SIZE_M
+              value: "0.005"
+            - name: CORS_ORIGINS
+              value: "*"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 2

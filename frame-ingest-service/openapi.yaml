@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: frame-ingest-service
+  version: 1.0.0
+servers:
+  - url: http://localhost:5301
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Ok
+  /ready:
+    get:
+      summary: Readiness check
+      responses:
+        '200':
+          description: Ready
+        '503':
+          description: Not ready
+  /frames:
+    post:
+      summary: Enqueue a camera frame
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FrameRequest'
+      responses:
+        '202':
+          description: Frame accepted
+        '400':
+          description: Invalid request
+  /ws/frames:
+    get:
+      summary: Receive frames over WebSocket
+      responses:
+        '101':
+          description: WebSocket upgrade
+components:
+  schemas:
+    FrameRequest:
+      type: object
+      properties:
+        frameId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        source:
+          type: string
+        mimeType:
+          type: string
+        sequence:
+          type: integer
+        payloadBase64:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - payloadBase64

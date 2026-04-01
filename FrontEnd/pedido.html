@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/GLTFLoader.js"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body>
 <header>
@@ -114,12 +115,33 @@
                     <i class="fas fa-sync"></i> Activar
                 </button>
             </div>
+            <div class="control-group">
+                <label>Puntos en cámara:</label>
+                <button id="detectPointsBtn" class="control-btn" type="button">
+                    <i class="fas fa-crosshairs"></i> Recalibrar
+                </button>
+            </div>
+            <div class="control-group">
+                <label>AR nativo:</label>
+                <button id="nativeArBtn" class="control-btn" type="button">
+                    <i class="fas fa-cube"></i> Abrir ARCore/ARKit
+                </button>
+            </div>
             <div class="control-tips">
-                <p><i class="fas fa-mouse"></i> Arrastra para rotar | <i class="fas fa-scroll"></i> Scroll para zoom</p>
+                <p><i class="fas fa-video"></i> Detección y anclaje automáticos en tiempo real | <i class="fas fa-arrows-left-right"></i> Arrastra horizontal para girar el plato</p>
             </div>
         </div>
 
         <div class="dish-info-ar" id="dishInfoAR"></div>
+        <div class="feature-detection-status" id="featureDetectionResult">Aún no se han detectado puntos en la cámara.</div>
+
+        <model-viewer
+            id="nativeArViewer"
+            ar
+            ar-modes="scene-viewer quick-look webxr"
+            camera-controls
+            style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
+        </model-viewer>
     </div>
 </div>
 
