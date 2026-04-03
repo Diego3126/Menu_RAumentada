@@ -1,24 +1,53 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Lock, Mail, ChefHat, Scan } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 
+const authApiBaseUrl = process.env.NEXT_PUBLIC_AUTH_API_URL ?? "http://localhost:4001"
+
 export function LoginForm() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    // Simular login
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsLoading(false)
+
+    try {
+      setErrorMessage(null)
+
+      const response = await fetch(`${authApiBaseUrl}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      })
+
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null
+
+      if (!response.ok) {
+        throw new Error(payload?.message ?? "No fue posible iniciar sesion")
+      }
+
+      router.push("/admin")
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "No fue posible iniciar sesion")
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -64,6 +93,7 @@ export function LoginForm() {
                   placeholder="admin@argastro.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                   className="h-12 border-border/50 bg-input pl-11 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
                   required
                 />
@@ -83,6 +113,7 @@ export function LoginForm() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                   className="h-12 border-border/50 bg-input pl-11 pr-11 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
                   required
                 />
@@ -134,6 +165,12 @@ export function LoginForm() {
                 </span>
               )}
             </Button>
+
+            {errorMessage ? (
+              <p className="text-sm text-red-500" role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
           </form>
 
           {/* Separador */}
