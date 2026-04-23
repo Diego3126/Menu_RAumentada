@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Menú AR - Restaurante</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<header>
+    <h1>🍽️ Restaurante Delicias</h1>
+    <p>Explora nuestro menú con Realidad Aumentada</p>
+    <button id="arExperienceBtn" class="ar-btn">
+        <i class="fas fa-camera"></i> Ver con Realidad Aumentada
+    </button>
+</header>
+
+<main>
+    <!-- Categorías (Subtarea MRA-5) -->
+    <section class="categories">
+        <h2>Categorías</h2>
+        <div class="category-list" id="categoryList">
+            <!-- JS llena aquí -->
+            <div class="loading-spinner">Cargando categorías...</div>
+        </div>
+    </section>
+
+    <!-- Lista de platos (Subtarea MRA-6) -->
+    <section class="dishes">
+        <h2>Platos</h2>
+        <div class="dishes-grid" id="dishesGrid">
+            <!-- JS llena aquí -->
+            <div class="loading-spinner">Cargando platos...</div>
+        </div>
+    </section>
+</main>
+
+<!-- Modal de Realidad Aumentada (simulación / integración) -->
+<div id="arModal" class="modal ar-modal">
+    <div class="modal-content ar-content">
+        <span class="close-ar-modal">&times;</span>
+        <h3>Realidad Aumentada</h3>
+        <div class="ar-viewer">
+            <p><i class="fas fa-vr-cardboard"></i> Simulación de AR</p>
+            <div class="ar-placeholder">
+                📱 Apunta tu cámara al código o <br>
+                <strong>visualiza el plato en 3D</strong>
+            </div>
+            <img src="https://via.placeholder.com/300x200?text=Modelo+3D+del+plato" alt="Modelo AR placeholder">
+            <p class="ar-note">*En una implementación real, aquí se usaría <strong>Three.js</strong> o <strong>model-viewer</strong> con modelos 3D.</p>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
