@@ -35,6 +35,7 @@ app.use('/api/platos', platosRoutes);
 app.use('/api/personalizacion', personalizacionRoutes);
 app.use('/api/carrito', carritoRoutes);
 app.use('/api/pedidos', pedidosRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 
 // Ruta principal
 app.get('/', (req, res) => {
