@@ -7,6 +7,8 @@ const platosRoutes = require('./routes/platos');
 const personalizacionRoutes = require('./routes/personalizacion');
 const carritoRoutes = require('./routes/carrito');
 const pedidosRoutes = require('./routes/pedidos');
+const usuariosRoutes = require('./routes/usuarios');
+const { authenticateToken } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
