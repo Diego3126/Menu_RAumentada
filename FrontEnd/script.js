@@ -13,6 +13,61 @@ const arModal = document.getElementById('arModal');
 const closeArModalSpan = document.querySelector('.close-ar-modal');
 const arExperienceBtn = document.getElementById('arExperienceBtn');
 
+// ---------- Autenticación (token + role) ----------
+function getAuthToken() {
+    return localStorage.getItem('authToken');
+}
+
+function getAuthRole() {
+    return localStorage.getItem('authRole');
+}
+
+function initAuthUI() {
+    const loginLink = document.getElementById('loginLink');
+    const logoutLink = document.getElementById('logoutLink');
+    const adminLink = document.getElementById('adminLink');
+    const token = getAuthToken();
+    const role = getAuthRole();
+
+    if (!loginLink || !logoutLink || !adminLink) return;
+
+    if (token) {
+        loginLink.style.display = 'none';
+        logoutLink.style.display = 'inline-block';
+        if (role === 'ADMIN') {
+            adminLink.style.display = 'inline-block';
+        } else {
+            adminLink.style.display = 'none';
+        }
+    } else {
+        loginLink.style.display = 'inline-block';
+        logoutLink.style.display = 'none';
+        adminLink.style.display = 'none';
+    }
+
+    logoutLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authRole');
+        initAuthUI();
+        window.location.href = 'index.html';
+    });
+}
+
+async function fetchWithAuth(url, options = {}) {
+    const token = getAuthToken();
+    options.headers = options.headers || {};
+    if (token) options.headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(url, options);
+    if (res.status === 401 || res.status === 403) {
+        // Redirigir a login
+        window.location.href = 'login.html';
+        throw new Error('Unauthorized');
+    }
+    return res;
+}
+
 // ==================== FUNCIONES PARA CARGAR DATOS ====================
 
 // Cargar platos desde el backend
@@ -123,8 +178,51 @@ function renderDishes() {
                 <div class="dish-name">${plato.nombre}</div>
                 <div class="dish-description">${plato.descripcion || 'Delicioso plato'}</div>
                 <div class="dish-price">$${parseFloat(plato.precio).toFixed(2)}</div>
+                <div class="dish-actions" data-id="${plato.id}"></div>
             </div>
         `;
+
+        // Añadir acciones administrativas si el usuario es ADMIN
+        const actionsEl = card.querySelector('.dish-actions');
+        if (getAuthRole && getAuthRole() === 'ADMIN') {
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Editar precio';
+            editBtn.className = 'btn-edit-price';
+            editBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const nuevo = prompt('Nuevo precio para ' + plato.nombre, plato.precio);
+                if (nuevo === null) return;
+                try {
+                    await fetchWithAuth(`${API_URL}/platos/${plato.id}/precio`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nuevoPrecio: parseFloat(nuevo) })
+                    });
+                    cargarPlatos();
+                } catch (err) {
+                    console.error('error update price', err);
+                    alert('Error actualizando precio');
+                }
+            });
+
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Eliminar';
+            delBtn.className = 'btn-delete';
+            delBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!confirm('Eliminar ' + plato.nombre + '?')) return;
+                try {
+                    await fetchWithAuth(`${API_URL}/platos/${plato.id}`, { method: 'DELETE' });
+                    cargarPlatos();
+                } catch (err) {
+                    console.error('delete error', err);
+                    alert('Error eliminando plato');
+                }
+            });
+
+            actionsEl.appendChild(editBtn);
+            actionsEl.appendChild(delBtn);
+        }
 
         // Agregar click al card para abrir modal de AR o ir a personalización
         card.addEventListener('click', () => {
@@ -210,6 +308,7 @@ window.onclick = (e) => {
 
 // Cargar todo al iniciar
 document.addEventListener('DOMContentLoaded', () => {
+    initAuthUI();
     cargarPlatos();
 });
 
@@ -240,6 +339,7 @@ async function actualizarContadorCarrito() {
 
 // Llamar al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
+    initAuthUI();
     actualizarContadorCarrito();
 });
 

@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/neon');
+const { authenticateToken } = require('../middleware/auth');
 
-// Guardar personalización
-router.post('/', async (req, res) => {
+// Guardar personalización (requiere autenticación)
+router.post('/', authenticateToken, async (req, res) => {
     const { plato_id, ingredientes_eliminados, ingredientes_agregados, precio_total } = req.body;
 
     try {
