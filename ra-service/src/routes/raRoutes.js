@@ -36,11 +36,7 @@ router.post('/session', async (req, res) => {
     let dish = null;
 
     if (dishId) {
-<<<<<<< Updated upstream
-      const dishResponse = await fetch(`${backendApiUrl}/dishes/${encodeURIComponent(dishId)}`, {
-=======
       const dishResponse = await fetch(`${backendApiUrl}/platos/${encodeURIComponent(dishId)}`, {
->>>>>>> Stashed changes
         headers: {
           'ngrok-skip-browser-warning': 'true'
         }
@@ -54,17 +50,10 @@ router.post('/session', async (req, res) => {
       }
 
       const dishData = await dishResponse.json();
-<<<<<<< Updated upstream
-      dish = dishData.data;
-    }
-
-    const modelPath = dish?.modelPath || fallbackModelPath;
-=======
       dish = dishData.plato;
     }
 
     const modelPath = dish?.model_path || fallbackModelPath;
->>>>>>> Stashed changes
 
     if (!modelPath) {
       return res.status(422).json({
