@@ -1,3 +1,12 @@
+// ============================================================
+// MRA-110: Endpoint para guardar pedidos
+// ============================================================
+// Rutas:
+//   POST /api/pedidos          → Registrar nuevo pedido
+//   GET  /api/pedidos/:codigo  → Obtener pedido por código
+//   GET  /api/pedidos/recientes/limite/:limite → Pedidos recientes (ADMIN)
+// ============================================================
+
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/neon');
