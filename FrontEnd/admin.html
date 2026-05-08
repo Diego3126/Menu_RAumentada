@@ -1,6 +1,339 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin — Restaurante Delicias</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            background: #0d0d0d;
+            font-family: 'DM Sans', sans-serif;
+            color: #f0ebe3;
+        }
+
+        /* NAV */
+        nav {
+            background: rgba(13,13,13,0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: #ff8c42;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            color: rgba(240,235,227,0.6);
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,140,66,0.12);
+            color: #ff8c42;
+        }
+
+        /* MAIN */
+        .main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .page-header p {
+            color: rgba(240,235,227,0.5);
+            font-size: 0.9rem;
+        }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.naranja { background: rgba(255,140,66,0.15); }
+        .stat-icon.verde   { background: rgba(76,175,80,0.15);  }
+        .stat-icon.azul    { background: rgba(64,156,255,0.15); }
+        .stat-icon.morado  { background: rgba(156,39,176,0.15); }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: rgba(240,235,227,0.5);
+            margin-top: 0.2rem;
+        }
+
+        /* TABLA PEDIDOS */
+        .section-title {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: rgba(240,235,227,0.8);
+        }
+
+        .tabla-wrap {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 0.9rem 1.2rem;
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(240,235,227,0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        tbody td {
+            padding: 0.9rem 1.2rem;
+            font-size: 0.88rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 0.25rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .estado-pendiente  { background: rgba(255,193,7,0.15);  color: #ffd54f; }
+        .estado-proceso    { background: rgba(33,150,243,0.15); color: #64b5f6; }
+        .estado-listo      { background: rgba(76,175,80,0.15);  color: #81c784; }
+        .estado-entregado  { background: rgba(158,158,158,0.15);color: #bdbdbd; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: rgba(240,235,227,0.3);
+        }
+
+        /* RESPONSIVE MRA-69 */
+        @media (max-width: 768px) {
+            nav { padding: 0 1rem; }
+            .nav-links { display: none; }
+            .main { padding: 1.2rem 1rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .tabla-wrap { overflow-x: auto; }
+            table { min-width: 500px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-brand">🍽️ Admin Panel</div>
+    <div class="nav-links">
+        <a href="/" class="nav-link"><i class="fas fa-store"></i> Ver menú</a>
+    </div>
+    <div id="userInfo"></div>
+</nav>
+
+<main class="main">
+    <div class="page-header">
+        <h1>Dashboard</h1>
+        <p id="saludo">Bienvenido al panel de administración</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon naranja">📋</div>
+            <div>
+                <div class="stat-value" id="statPedidos">—</div>
+                <div class="stat-label">Pedidos hoy</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon verde">⏳</div>
+            <div>
+                <div class="stat-value" id="statPendientes">—</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon azul">💰</div>
+            <div>
+                <div class="stat-value" id="statTotal">—</div>
+                <div class="stat-label">Total del día</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon morado">👤</div>
+            <div>
+                <div class="stat-value" id="statUsuarios">—</div>
+                <div class="stat-label">Usuarios</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla pedidos -->
+    <p class="section-title">Pedidos recientes</p>
+    <div class="tabla-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Cliente</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody id="tablaPedidos">
+                <tr><td colspan="5" class="empty-state">Cargando pedidos...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<script src="auth-helper.js"></script>
+<script>
+    // MRA-66: Proteger esta página — solo admins
+    const usuario = requireRol('admin');
+    if (usuario) {
+        renderUserInfo(usuario);
+        document.getElementById('saludo').textContent =
+            `Hola, ${usuario.nombre}. Aquí tienes el resumen del día.`;
+        cargarDatos();
+    }
+
+    async function cargarDatos() {
+        const token = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        try {
+            // Cargar pedidos
+            const resPedidos = await fetch(`${API_URL}/pedidos`, { headers });
+            if (resPedidos.ok) {
+                const pedidos = await resPedidos.json();
+                const hoy = new Date().toDateString();
+                const pedidosHoy = pedidos.filter(p =>
+                    new Date(p.created_at).toDateString() === hoy
+                );
+                const pendientes = pedidos.filter(p => p.estado === 'pendiente');
+                const totalDia   = pedidosHoy.reduce((s, p) => s + parseFloat(p.total || 0), 0);
+
+                document.getElementById('statPedidos').textContent   = pedidosHoy.length;
+                document.getElementById('statPendientes').textContent = pendientes.length;
+                document.getElementById('statTotal').textContent      = `$${totalDia.toFixed(0)}`;
+
+                // Render tabla
+                const tbody = document.getElementById('tablaPedidos');
+                if (pedidos.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Sin pedidos aún</td></tr>`;
+                } else {
+                    tbody.innerHTML = pedidos.slice(0, 10).map(p => `
+                        <tr>
+                            <td><strong>${p.codigo_pedido}</strong></td>
+                            <td>${p.nombre_cliente}</td>
+                            <td>$${parseFloat(p.total || 0).toFixed(2)}</td>
+                            <td><span class="estado-badge estado-${p.estado}">${p.estado}</span></td>
+                            <td>${new Date(p.created_at).toLocaleString('es-CO')}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+
+            // Cargar usuarios
+            const resUsuarios = await fetch(`${API_URL}/usuarios`, { headers });
+            if (resUsuarios.ok) {
+                const usuarios = await resUsuarios.json();
+                document.getElementById('statUsuarios').textContent = usuarios.length;
+            }
+
+        } catch (err) {
+            console.error('Error cargando datos:', err);
+        }
+    }
+</script>
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin - Menú AR</title>

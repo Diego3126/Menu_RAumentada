@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista Cocina — Restaurante Delicias</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0a;
+            font-family: 'DM Sans', sans-serif;
+            color: #f0ebe3;
+        }
+
+        nav {
+            background: rgba(10,10,10,0.97);
+            border-bottom: 1px solid rgba(76,175,80,0.2);
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: #4caf50;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .page-header {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+        }
+
+        .refresh-btn {
+            background: rgba(76,175,80,0.12);
+            border: 1px solid rgba(76,175,80,0.25);
+            color: #81c784;
+            padding: 0.5rem 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .refresh-btn:hover { background: rgba(76,175,80,0.2); }
+
+        /* PEDIDOS GRID */
+        .pedidos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .pedido-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.2rem;
+            transition: transform 0.2s;
+        }
+
+        .pedido-card:hover { transform: translateY(-2px); }
+
+        .pedido-card.pendiente  { border-top: 3px solid #ffd54f; }
+        .pedido-card.en-proceso { border-top: 3px solid #64b5f6; }
+        .pedido-card.listo      { border-top: 3px solid #81c784; opacity: 0.7; }
+
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .pedido-codigo {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #ff8c42;
+        }
+
+        .estado-badge {
+            font-size: 0.72rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .badge-pendiente  { background: rgba(255,213,79,0.15);  color: #ffd54f; }
+        .badge-en-proceso { background: rgba(100,181,246,0.15); color: #64b5f6; }
+        .badge-listo      { background: rgba(129,199,132,0.15); color: #81c784; }
+
+        .pedido-cliente {
+            font-size: 0.88rem;
+            color: rgba(240,235,227,0.6);
+            margin-bottom: 0.8rem;
+        }
+
+        .pedido-items {
+            font-size: 0.82rem;
+            color: rgba(240,235,227,0.8);
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 0.7rem;
+            margin-bottom: 0.8rem;
+            line-height: 1.6;
+        }
+
+        .pedido-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-accion {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-proceso {
+            background: rgba(100,181,246,0.15);
+            color: #64b5f6;
+            border: 1px solid rgba(100,181,246,0.25);
+        }
+
+        .btn-proceso:hover { background: rgba(100,181,246,0.25); }
+
+        .btn-listo {
+            background: rgba(129,199,132,0.15);
+            color: #81c784;
+            border: 1px solid rgba(129,199,132,0.25);
+        }
+
+        .btn-listo:hover { background: rgba(129,199,132,0.25); }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+            color: rgba(240,235,227,0.3);
+        }
+
+        .empty-state i { font-size: 3rem; margin-bottom: 1rem; display: block; }
+
+        /* RESPONSIVE MRA-69 */
+        @media (max-width: 600px) {
+            nav { padding: 0 1rem; }
+            .main { padding: 1rem; }
+            .pedidos-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-brand">👨‍🍳 Vista Cocina</div>
+    <div id="userInfo"></div>
+</nav>
+
+<main class="main">
+    <div class="page-header">
+        <div>
+            <h1>Pedidos en curso</h1>
+            <p style="color:rgba(240,235,227,0.4);font-size:0.85rem;margin-top:0.2rem;" id="ultimaActualizacion"></p>
+        </div>
+        <button class="refresh-btn" onclick="cargarPedidos()">
+            <i class="fas fa-rotate-right"></i> Actualizar
+        </button>
+    </div>
+
+    <div class="pedidos-grid" id="pedidosGrid">
+        <div class="empty-state"><i class="fas fa-spinner fa-spin"></i>Cargando pedidos...</div>
+    </div>
+</main>
+
+<script src="auth-helper.js"></script>
+<script>
+    // MRA-66: Solo cocineros
+    const usuario = requireRol('cocinero');
+    if (usuario) {
+        renderUserInfo(usuario);
+        cargarPedidos();
+        // Auto-refresh cada 30 segundos
+        setInterval(cargarPedidos, 30000);
+    }
+
+    async function cargarPedidos() {
+        const token = localStorage.getItem('token');
+        const grid  = document.getElementById('pedidosGrid');
+
+        try {
+            const res = await fetch(`${API_URL}/pedidos`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!res.ok) throw new Error('Error al cargar pedidos');
+
+            const pedidos = await res.json();
+
+            // Filtrar: cocina solo ve pendientes y en proceso
+            const activos = pedidos.filter(p =>
+                p.estado === 'pendiente' || p.estado === 'en proceso'
+            );
+
+            document.getElementById('ultimaActualizacion').textContent =
+                `Última actualización: ${new Date().toLocaleTimeString('es-CO')}`;
+
+            if (activos.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle" style="color:#81c784"></i>
+                        ¡Todo al día! No hay pedidos pendientes.
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = activos.map(p => `
+                <div class="pedido-card ${p.estado.replace(' ', '-')}" id="card-${p.id}">
+                    <div class="pedido-header">
+                        <span class="pedido-codigo">#${p.codigo_pedido}</span>
+                        <span class="estado-badge badge-${p.estado.replace(' ', '-')}">${p.estado}</span>
+                    </div>
+                    <div class="pedido-cliente">
+                        <i class="fas fa-user" style="font-size:0.75rem;margin-right:0.3rem;"></i>
+                        ${p.nombre_cliente}
+                        ${p.notas ? `<br><i class="fas fa-note-sticky" style="font-size:0.75rem;margin-right:0.3rem;"></i><em>${p.notas}</em>` : ''}
+                    </div>
+                    <div class="pedido-items">
+                        Total: <strong style="color:#ff8c42">$${parseFloat(p.total || 0).toFixed(2)}</strong><br>
+                        Hace: ${tiempoTranscurrido(p.created_at)}
+                    </div>
+                    <div class="pedido-actions">
+                        ${p.estado === 'pendiente' ? `
+                            <button class="btn-accion btn-proceso" onclick="cambiarEstado(${p.id}, 'en proceso')">
+                                <i class="fas fa-fire"></i> En proceso
+                            </button>` : ''}
+                        <button class="btn-accion btn-listo" onclick="cambiarEstado(${p.id}, 'listo')">
+                            <i class="fas fa-check"></i> Listo
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (err) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-triangle-exclamation" style="color:#ff5c5c"></i>
+                    Error al cargar pedidos. ¿Está el servidor corriendo?
+                </div>`;
+        }
+    }
+
+    async function cambiarEstado(pedidoId, nuevoEstado) {
+        const token = localStorage.getItem('token');
+        try {
+            await fetch(`${API_URL}/pedidos/${pedidoId}/estado`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ estado: nuevoEstado })
+            });
+            cargarPedidos();
+        } catch (err) {
+            alert('No se pudo actualizar el estado. Intenta de nuevo.');
+        }
+    }
+
+    function tiempoTranscurrido(fechaStr) {
+        const diff = Math.floor((Date.now() - new Date(fechaStr)) / 60000);
+        if (diff < 1)  return 'hace un momento';
+        if (diff < 60) return `hace ${diff} min`;
+        return `hace ${Math.floor(diff / 60)}h ${diff % 60}min`;
+    }
+</script>
+
+</body>
+</html>
