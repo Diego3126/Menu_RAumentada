@@ -150,7 +150,9 @@ router.get('/:codigo', async (req, res) => {
 });
 
 // Obtener pedidos recientes (opcional)
-router.get('/recientes/limite/:limite', async (req, res) => {
+const { authenticateToken, requireRole } = require('../middleware/auth');
+
+router.get('/recientes/limite/:limite', authenticateToken, requireRole('ADMIN'), async (req, res) => {
     const { limite } = req.params;
 
     try {
