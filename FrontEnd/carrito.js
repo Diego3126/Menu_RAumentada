@@ -239,14 +239,88 @@ cancelarVaciarBtn?.addEventListener('click', () => {
     vaciarModal.style.display = 'none';
 });
 
-// Continuar con el pedido (ir a checkout)
-continuarPedidoBtn?.addEventListener('click', () => {
+// Confirmar pedido — POST /api/pedidos con token de auth (MRA-111)
+continuarPedidoBtn?.addEventListener('click', async () => {
     if (carritoItems.length === 0) {
         alert('Tu carrito está vacío. Agrega algunos platos primero.');
         return;
     }
-    // Aquí iría la página de checkout (para la siguiente tarea)
-    alert('Próximamente: finalizar compra');
+
+    // Obtener token guardado por el login del compañero
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Debes iniciar sesión para confirmar tu pedido.');
+        window.location.href = '/login.html';
+        return;
+    }
+
+    // Obtener nombre del usuario logueado (guardado en login)
+    const usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const nombre_cliente  = usuarioGuardado.nombre || 'Cliente';
+    const email_cliente   = usuarioGuardado.email  || '';
+
+    // Calcular subtotal y total desde los items del carrito
+    let subtotal = 0;
+    carritoItems.forEach(item => {
+        subtotal += item.cantidad * parseFloat(item.plato_precio);
+    });
+    const total = subtotal;
+
+    // Construir array de items con el formato que espera el backend
+    const items = carritoItems.map(item => ({
+        plato_id:                item.plato_id,
+        plato_nombre:            item.plato_nombre,
+        precio_unitario:         parseFloat(item.plato_precio),
+        cantidad:                item.cantidad,
+        subtotal:                item.cantidad * parseFloat(item.plato_precio),
+        ingredientes_originales: item.ingredientes_originales || '',
+        ingredientes_eliminados: item.ingredientes_eliminados || '',
+        ingredientes_agregados:  item.ingredientes_agregados  || ''
+    }));
+
+    continuarPedidoBtn.disabled = true;
+    continuarPedidoBtn.textContent = 'Enviando pedido...';
+
+    try {
+        const response = await fetch(`${API_URL}/pedidos`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'x-session-id': sessionId
+            },
+            body: JSON.stringify({
+                items,
+                nombre_cliente,
+                email_cliente,
+                telefono_cliente: '',
+                notas:    '',
+                subtotal,
+                total
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Pedido registrado — redirigir con el código para mostrar confirmación
+            window.location.href = `confirmacion.html?codigo=${data.pedido.codigo}`;
+        } else if (response.status === 401) {
+            alert('Tu sesión expiró. Inicia sesión de nuevo.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
+            window.location.href = '/login.html';
+        } else {
+            const detalle = data.detalles ? data.detalles.join('\n') : (data.error || 'Error desconocido');
+            alert(`No se pudo registrar el pedido:\n${detalle}`);
+        }
+    } catch (error) {
+        console.error('Error al confirmar pedido:', error);
+        alert('Error de conexión. Intenta de nuevo.');
+    } finally {
+        continuarPedidoBtn.disabled = false;
+        continuarPedidoBtn.innerHTML = '<i class="fas fa-arrow-right"></i> Confirmar pedido';
+    }
 });
 
 // Cerrar modales
