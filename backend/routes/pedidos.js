@@ -161,3 +161,95 @@ router.get('/recientes/limite/:limite', async (req, res) => {
 });
 
 module.exports = router;
+
+// ============================================================
+// MRA-119/120: GET /api/pedidos — Lista pedidos activos
+// Cocineros ven pendientes y en_preparacion
+// Admins ven todos
+// ============================================================
+router.get('/', requireAuth, async (req, res) => {
+    try {
+        const esAdmin = req.usuario?.rol === 'admin';
+
+        // Admins ven todos; cocineros solo los activos
+        const whereClause = esAdmin
+            ? ''
+            : `WHERE estado IN ('pendiente', 'en_preparacion')`;
+
+        const pedidosResult = await pool.query(
+            `SELECT p.*,
+                    (SELECT COUNT(*) FROM pedido_detalles WHERE pedido_id = p.id) AS num_items
+             FROM pedidos p
+             ${whereClause}
+             ORDER BY p.created_at ASC`
+        );
+
+        // Incluir detalles de cada pedido para que cocina vea los platos
+        const pedidosConDetalles = await Promise.all(
+            pedidosResult.rows.map(async (pedido) => {
+                const detalles = await pool.query(
+                    `SELECT plato_nombre, cantidad,
+                            ingredientes_eliminados, ingredientes_agregados
+                     FROM pedido_detalles
+                     WHERE pedido_id = $1
+                     ORDER BY id`,
+                    [pedido.id]
+                );
+                return { ...pedido, items: detalles.rows };
+            })
+        );
+
+        res.json(pedidosConDetalles);
+
+    } catch (error) {
+        console.error('Error al listar pedidos:', error);
+        res.status(500).json({ error: 'Error al obtener los pedidos.' });
+    }
+});
+
+// ============================================================
+// MRA-120/122: PATCH /api/pedidos/:id/estado
+// Cambia el estado de un pedido (cocinero o admin)
+// Estados válidos: pendiente → en_preparacion → listo → entregado
+// ============================================================
+router.patch('/:id/estado', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const { estado } = req.body;
+
+    const estadosValidos = ['pendiente', 'en_preparacion', 'listo', 'entregado', 'cancelado'];
+
+    // MRA-124: Validar estado recibido
+    if (!estado || !estadosValidos.includes(estado)) {
+        return res.status(400).json({
+            error: `Estado inválido. Debe ser uno de: ${estadosValidos.join(', ')}`
+        });
+    }
+
+    if (!id || isNaN(parseInt(id))) {
+        return res.status(400).json({ error: 'ID de pedido inválido.' });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE pedidos
+             SET estado = $1, updated_at = NOW()
+             WHERE id = $2
+             RETURNING id, codigo_pedido, estado, updated_at`,
+            [estado, parseInt(id)]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Pedido no encontrado.' });
+        }
+
+        res.json({
+            success: true,
+            pedido: result.rows[0],
+            mensaje: `Pedido actualizado a "${estado}"`
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar estado:', error);
+        res.status(500).json({ error: 'Error al actualizar el estado del pedido.' });
+    }
+});
