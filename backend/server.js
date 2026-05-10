@@ -29,6 +29,11 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
+// MRA-83: Cambio de contraseña
+app.get('/cambiar-password', (req, res) => {
+    res.sendFile(path.join(__dirname, '../FrontEnd/cambiar-password.html'));
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
