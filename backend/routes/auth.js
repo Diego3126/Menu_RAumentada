@@ -171,6 +171,64 @@ router.get('/me', requireAuth, async (req, res) => {
     }
 });
 
+/**
+ * POST /api/auth/cambiar-password
+ * MRA-84 a 91: Cambio de contraseña con validaciones completas
+ * Requiere autenticación (token en header Authorization)
+ * Body: { passwordActual, passwordNueva, passwordConfirmar }
+ */
+router.post('/cambiar-password', requireAuth, async (req, res) => {
+    const { passwordActual, passwordNueva, passwordConfirmar } = req.body;
+    const { userId } = req.usuario;
+
+    // MRA-86: Validar campos
+    if (!passwordActual || !passwordNueva || !passwordConfirmar) {
+        return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
+    }
+
+    if (passwordNueva.length < 6) {
+        return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+    }
+
+    if (passwordNueva !== passwordConfirmar) {
+        return res.status(400).json({ error: 'La nueva contraseña y la confirmación no coinciden.' });
+    }
+
+    if (passwordActual === passwordNueva) {
+        return res.status(400).json({ error: 'La nueva contraseña debe ser diferente a la actual.' });
+    }
+
+    try {
+        // MRA-85: Verificar contraseña actual
+        const result = await pool.query(
+            'SELECT password FROM usuarios WHERE id = $1',
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado.' });
+        }
+
+        if (hashPassword(passwordActual) !== result.rows[0].password) {
+            return res.status(401).json({ error: 'La contraseña actual es incorrecta.' });
+        }
+
+        // MRA-87 + MRA-88: Encriptar y guardar
+        await pool.query(
+            'UPDATE usuarios SET password = $1, updated_at = NOW() WHERE id = $2',
+            [hashPassword(passwordNueva), userId]
+        );
+
+        // MRA-89: Respuesta de éxito
+        res.json({ success: true, mensaje: 'Contraseña actualizada correctamente.' });
+
+    } catch (error) {
+        // MRA-91: Manejo de errores
+        console.error('Error al cambiar contraseña:', error);
+        res.status(500).json({ error: 'Error al actualizar la contraseña. Intenta de nuevo.' });
+    }
+});
+
 // Exportar router y middlewares para usarlos en otras rutas
 module.exports = router;
 module.exports.requireAuth = requireAuth;
