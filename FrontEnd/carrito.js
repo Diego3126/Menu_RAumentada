@@ -18,9 +18,125 @@ const confirmarVaciarBtn = document.getElementById('confirmarVaciarBtn');
 const cancelarVaciarBtn = document.getElementById('cancelarVaciarBtn');
 const closeModal = document.querySelectorAll('.close-modal');
 
+// ==================== MRA-117: SISTEMA DE NOTIFICACIONES ====================
+// Reemplaza todos los alert() por notificaciones visuales no bloqueantes
+
+(function crearContenedorToasts() {
+    if (document.getElementById('toast-container')) return;
+    const container = document.createElement('div');
+    container.id = 'toast-container';
+    container.style.cssText = `
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        pointer-events: none;
+    `;
+    document.body.appendChild(container);
+})();
+
+/**
+ * MRA-117: Muestra una notificación tipo toast
+ * @param {string} mensaje  - Texto a mostrar
+ * @param {'success'|'error'|'warning'|'info'} tipo - Tipo de notificación
+ * @param {number} duracion - Duración en ms (default 4000)
+ */
+function mostrarNotificacion(mensaje, tipo = 'info', duracion = 4000) {
+    const colores = {
+        success: { bg: '#1a2e1a', border: 'rgba(107,203,119,0.4)', icon: '✓', iconColor: '#6bcb77' },
+        error:   { bg: '#2e1a1a', border: 'rgba(255,107,107,0.4)', icon: '✕', iconColor: '#ff6b6b' },
+        warning: { bg: '#2e2314', border: 'rgba(255,140,66,0.4)',  icon: '⚠', iconColor: '#ff8c42' },
+        info:    { bg: '#1a1f2e', border: 'rgba(100,160,255,0.4)', icon: 'ℹ', iconColor: '#64a0ff' },
+    };
+
+    const c = colores[tipo] || colores.info;
+    const container = document.getElementById('toast-container');
+
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        background: ${c.bg};
+        border: 1px solid ${c.border};
+        border-radius: 14px;
+        padding: 0.9rem 1.2rem;
+        min-width: 280px;
+        max-width: 380px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        backdrop-filter: blur(12px);
+        pointer-events: all;
+        opacity: 0;
+        transform: translateX(30px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+    `;
+
+    toast.innerHTML = `
+        <span style="
+            font-size: 1rem;
+            font-weight: 700;
+            color: ${c.iconColor};
+            flex-shrink: 0;
+            margin-top: 1px;
+        ">${c.icon}</span>
+        <span style="
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.5;
+            flex: 1;
+        ">${mensaje}</span>
+        <span style="
+            color: rgba(255,255,255,0.3);
+            font-size: 1rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: -1px;
+        ">×</span>
+    `;
+
+    container.appendChild(toast);
+
+    // Animar entrada
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(0)';
+    });
+
+    // Cerrar al hacer click
+    toast.addEventListener('click', () => cerrarToast(toast));
+
+    // Cerrar automáticamente
+    const timer = setTimeout(() => cerrarToast(toast), duracion);
+    toast._timer = timer;
+}
+
+function cerrarToast(toast) {
+    clearTimeout(toast._timer);
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(30px)';
+    setTimeout(() => toast.remove(), 300);
+}
+
+// ==================== MRA-117: ESTADO DE CARGA EN BOTONES ====================
+
+function setBtnCargando(btn, cargando, textoOriginal, textoCarga = 'Procesando...') {
+    if (!btn) return;
+    btn.disabled = cargando;
+    if (cargando) {
+        btn.dataset.textoOriginal = btn.innerHTML;
+        btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${textoCarga}`;
+    } else {
+        btn.innerHTML = btn.dataset.textoOriginal || textoOriginal;
+    }
+}
+
 // ==================== FUNCIONES DEL CARRITO ====================
 
-// Obtener o crear sessionId
 function getSessionId() {
     let id = localStorage.getItem('carritoSessionId');
     if (!id) {
@@ -30,36 +146,78 @@ function getSessionId() {
     return id;
 }
 
-// Cargar carrito desde el backend
+// MRA-117: Mostrar skeleton loader mientras carga
+function mostrarSkeletonLoader() {
+    if (!carritoItemsEl) return;
+    carritoItemsEl.innerHTML = `
+        <div style="padding: 1rem;">
+            ${[1,2,3].map(() => `
+                <div style="
+                    display: flex; justify-content: space-between; align-items: center;
+                    padding: 1.1rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.06);
+                    gap: 1rem; animation: shimmer 1.5s infinite;
+                ">
+                    <div style="flex:1;">
+                        <div style="height:14px; width:60%; background:rgba(255,255,255,0.08); border-radius:6px; margin-bottom:8px;"></div>
+                        <div style="height:10px; width:40%; background:rgba(255,255,255,0.05); border-radius:6px;"></div>
+                    </div>
+                    <div style="height:32px; width:100px; background:rgba(255,255,255,0.07); border-radius:50px;"></div>
+                </div>
+            `).join('')}
+        </div>
+        <style>
+            @keyframes shimmer {
+                0%   { opacity: 1; }
+                50%  { opacity: 0.5; }
+                100% { opacity: 1; }
+            }
+        </style>
+    `;
+}
+
 async function cargarCarrito() {
     sessionId = getSessionId();
+    mostrarSkeletonLoader(); // MRA-117: skeleton en vez de pantalla en blanco
 
     try {
         const response = await fetch(`${API_URL}/carrito`, {
-            headers: {
-                'x-session-id': sessionId
-            }
+            headers: { 'x-session-id': sessionId }
         });
+
+        // MRA-117: Distinguir entre error de red y error del servidor
+        if (!response.ok) {
+            if (response.status >= 500) {
+                throw new Error('server');
+            }
+            throw new Error(`HTTP ${response.status}`);
+        }
 
         const data = await response.json();
         carritoItems = data.items || [];
-
         renderizarCarrito();
         actualizarResumen();
 
     } catch (error) {
         console.error('Error al cargar carrito:', error);
+
+        // MRA-117: Mensaje diferenciado según tipo de error
+        const esRedError = error.message === 'Failed to fetch' || error instanceof TypeError;
+        const mensaje = esRedError
+            ? 'Sin conexión. Verifica tu internet e intenta de nuevo.'
+            : 'El servidor no está disponible temporalmente.';
+
         carritoItemsEl.innerHTML = `
-            <div class="error-message">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>Error al cargar el carrito</p>
-                <button onclick="cargarCarrito()" class="btn-retry">Reintentar</button>
+            <div class="error-message" style="text-align:center; padding:3rem 2rem;">
+                <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:#ff8c42; display:block; margin-bottom:1rem;"></i>
+                <p style="color:rgba(255,255,255,0.6); margin-bottom:1.5rem;">${mensaje}</p>
+                <button onclick="cargarCarrito()" class="btn-retry">
+                    <i class="fas fa-redo"></i> Reintentar
+                </button>
             </div>
         `;
     }
 }
 
-// Renderizar items del carrito (MRA-19, MRA-20, MRA-21)
 function renderizarCarrito() {
     if (!carritoItemsEl) return;
 
@@ -81,7 +239,6 @@ function renderizarCarrito() {
         itemDiv.className = 'carrito-item';
         itemDiv.dataset.id = item.id;
 
-        // Construir HTML de personalizaciones
         let personalizacionesHtml = '';
         if (item.ingredientes_eliminados && item.ingredientes_eliminados !== 'Ninguno') {
             personalizacionesHtml += `<span class="eliminado"><i class="fas fa-ban"></i> Sin: ${item.ingredientes_eliminados}</span>`;
@@ -114,37 +271,31 @@ function renderizarCarrito() {
         carritoItemsEl.appendChild(itemDiv);
     });
 
-    // Agregar event listeners (MRA-20: modificar cantidad)
     document.querySelectorAll('.cantidad-btn.menos').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+        btn.addEventListener('click', async () => {
             const id = parseInt(btn.dataset.id);
             const item = carritoItems.find(i => i.id === id);
-            if (item && item.cantidad > 1) {
-                await actualizarCantidad(id, item.cantidad - 1);
-            }
+            if (item && item.cantidad > 1) await actualizarCantidad(id, item.cantidad - 1);
         });
     });
 
     document.querySelectorAll('.cantidad-btn.mas').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+        btn.addEventListener('click', async () => {
             const id = parseInt(btn.dataset.id);
             const item = carritoItems.find(i => i.id === id);
-            if (item) {
-                await actualizarCantidad(id, item.cantidad + 1);
-            }
+            if (item) await actualizarCantidad(id, item.cantidad + 1);
         });
     });
 
-    // Agregar event listeners para eliminar (MRA-21)
     document.querySelectorAll('.eliminar-item').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+        btn.addEventListener('click', async () => {
             const id = parseInt(btn.dataset.id);
             await eliminarItem(id);
         });
     });
 }
 
-// Actualizar cantidad de un item (MRA-20)
+// MRA-117: actualizarCantidad con feedback visual
 async function actualizarCantidad(id, nuevaCantidad) {
     try {
         const response = await fetch(`${API_URL}/carrito/${id}/cantidad`, {
@@ -157,62 +308,66 @@ async function actualizarCantidad(id, nuevaCantidad) {
         });
 
         if (response.ok) {
-            await cargarCarrito(); // Recargar carrito
+            await cargarCarrito();
         } else {
-            const error = await response.json();
-            console.error('Error:', error);
-            alert('Error al actualizar cantidad');
+            const data = await response.json().catch(() => ({}));
+            // MRA-117: toast en vez de alert
+            mostrarNotificacion(
+                data.error || 'No se pudo actualizar la cantidad.',
+                'error'
+            );
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Error de conexión');
+        console.error('Error al actualizar cantidad:', error);
+        mostrarNotificacion('Error de conexión al actualizar la cantidad.', 'error');
     }
 }
 
-// Eliminar un item del carrito (MRA-21)
+// MRA-117: eliminarItem con feedback visual
 async function eliminarItem(id) {
+    const nombreItem = carritoItems.find(i => i.id === id)?.plato_nombre || 'El plato';
+
     try {
         const response = await fetch(`${API_URL}/carrito/${id}`, {
             method: 'DELETE',
-            headers: {
-                'x-session-id': sessionId
-            }
+            headers: { 'x-session-id': sessionId }
         });
 
         if (response.ok) {
-            await cargarCarrito(); // Recargar carrito
+            mostrarNotificacion(`${nombreItem} eliminado del carrito.`, 'info', 2500);
+            await cargarCarrito();
         } else {
-            alert('Error al eliminar el item');
+            mostrarNotificacion('No se pudo eliminar el plato. Intenta de nuevo.', 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Error de conexión');
+        console.error('Error al eliminar item:', error);
+        mostrarNotificacion('Error de conexión al eliminar el plato.', 'error');
     }
 }
 
-// Vaciar carrito completo
+// MRA-117: vaciarCarrito con feedback visual
 async function vaciarCarrito() {
     try {
         const response = await fetch(`${API_URL}/carrito`, {
             method: 'DELETE',
-            headers: {
-                'x-session-id': sessionId
-            }
+            headers: { 'x-session-id': sessionId }
         });
 
         if (response.ok) {
-            await cargarCarrito();
             vaciarModal.style.display = 'none';
+            mostrarNotificacion('Carrito vaciado correctamente.', 'success', 2500);
+            await cargarCarrito();
         } else {
-            alert('Error al vaciar el carrito');
+            vaciarModal.style.display = 'none';
+            mostrarNotificacion('No se pudo vaciar el carrito. Intenta de nuevo.', 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Error de conexión');
+        console.error('Error al vaciar carrito:', error);
+        vaciarModal.style.display = 'none';
+        mostrarNotificacion('Error de conexión. No se pudo vaciar el carrito.', 'error');
     }
 }
 
-// Actualizar resumen (subtotal y total)
 function actualizarResumen() {
     if (!subtotalEl || !totalEl) return;
 
@@ -227,10 +382,11 @@ function actualizarResumen() {
 
 // ==================== EVENT LISTENERS ====================
 
-// Vaciar carrito
 vaciarCarritoBtn?.addEventListener('click', () => {
     if (carritoItems.length > 0) {
         vaciarModal.style.display = 'flex';
+    } else {
+        mostrarNotificacion('El carrito ya está vacío.', 'info', 2500);
     }
 });
 
@@ -239,34 +395,30 @@ cancelarVaciarBtn?.addEventListener('click', () => {
     vaciarModal.style.display = 'none';
 });
 
-// Confirmar pedido — POST /api/pedidos con token de auth (MRA-111)
+// MRA-117: Confirmar pedido con manejo de errores completo
 continuarPedidoBtn?.addEventListener('click', async () => {
     if (carritoItems.length === 0) {
-        alert('Tu carrito está vacío. Agrega algunos platos primero.');
+        mostrarNotificacion('Tu carrito está vacío. Agrega algunos platos primero.', 'warning');
         return;
     }
 
-    // Obtener token guardado por el login del compañero
     const token = localStorage.getItem('token');
     if (!token) {
-        alert('Debes iniciar sesión para confirmar tu pedido.');
-        window.location.href = '/login.html';
+        mostrarNotificacion('Debes iniciar sesión para confirmar tu pedido.', 'warning', 5000);
+        setTimeout(() => { window.location.href = '/login.html'; }, 1500);
         return;
     }
 
-    // Obtener nombre del usuario logueado (guardado en login)
     const usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
-    const nombre_cliente  = usuarioGuardado.nombre || 'Cliente';
-    const email_cliente   = usuarioGuardado.email  || '';
+    const nombre_cliente = usuarioGuardado.nombre || 'Cliente';
+    const email_cliente  = usuarioGuardado.email  || '';
 
-    // Calcular subtotal y total desde los items del carrito
     let subtotal = 0;
     carritoItems.forEach(item => {
         subtotal += item.cantidad * parseFloat(item.plato_precio);
     });
     const total = subtotal;
 
-    // Construir array de items con el formato que espera el backend
     const items = carritoItems.map(item => ({
         plato_id:                item.plato_id,
         plato_nombre:            item.plato_nombre,
@@ -278,8 +430,7 @@ continuarPedidoBtn?.addEventListener('click', async () => {
         ingredientes_agregados:  item.ingredientes_agregados  || ''
     }));
 
-    continuarPedidoBtn.disabled = true;
-    continuarPedidoBtn.textContent = 'Enviando pedido...';
+    setBtnCargando(continuarPedidoBtn, true, '', 'Enviando pedido...');
 
     try {
         const response = await fetch(`${API_URL}/pedidos`, {
@@ -290,50 +441,60 @@ continuarPedidoBtn?.addEventListener('click', async () => {
                 'x-session-id': sessionId
             },
             body: JSON.stringify({
-                items,
-                nombre_cliente,
-                email_cliente,
-                telefono_cliente: '',
-                notas:    '',
-                subtotal,
-                total
+                items, nombre_cliente, email_cliente,
+                telefono_cliente: '', notas: '', subtotal, total
             })
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // Pedido registrado — redirigir con el código para mostrar confirmación
-            window.location.href = `confirmacion.html?codigo=${data.pedido.codigo}`;
+            // MRA-117: Confirmación visual antes de redirigir
+            mostrarNotificacion(`¡Pedido #${data.pedido.codigo} registrado! Redirigiendo...`, 'success', 3000);
+            setTimeout(() => {
+                window.location.href = `confirmacion.html?codigo=${data.pedido.codigo}`;
+            }, 1200);
+
         } else if (response.status === 401) {
-            alert('Tu sesión expiró. Inicia sesión de nuevo.');
+            // MRA-117: Token expirado — limpiar sesión y redirigir
+            mostrarNotificacion('Tu sesión expiró. Inicia sesión de nuevo.', 'warning', 4000);
             localStorage.removeItem('token');
             localStorage.removeItem('usuario');
-            window.location.href = '/login.html';
+            setTimeout(() => { window.location.href = '/login.html'; }, 2000);
+
+        } else if (response.status === 400 && data.detalles) {
+            // MRA-117: Errores de validación del backend — mostrar cada uno
+            data.detalles.forEach((err, i) => {
+                setTimeout(() => mostrarNotificacion(err, 'error', 5000), i * 300);
+            });
+
         } else {
-            const detalle = data.detalles ? data.detalles.join('\n') : (data.error || 'Error desconocido');
-            alert(`No se pudo registrar el pedido:\n${detalle}`);
+            // MRA-117: Error genérico del servidor
+            mostrarNotificacion(
+                data.error || 'No se pudo registrar el pedido. Intenta de nuevo.',
+                'error'
+            );
         }
+
     } catch (error) {
         console.error('Error al confirmar pedido:', error);
-        alert('Error de conexión. Intenta de nuevo.');
+        // MRA-117: Distinguir error de red vs error inesperado
+        if (error instanceof TypeError && error.message === 'Failed to fetch') {
+            mostrarNotificacion('Sin conexión. Verifica tu internet e intenta de nuevo.', 'error', 5000);
+        } else {
+            mostrarNotificacion('Error inesperado. Por favor intenta de nuevo.', 'error');
+        }
     } finally {
-        continuarPedidoBtn.disabled = false;
-        continuarPedidoBtn.innerHTML = '<i class="fas fa-arrow-right"></i> Confirmar pedido';
+        setBtnCargando(continuarPedidoBtn, false, '<i class="fas fa-arrow-right"></i> Confirmar pedido');
     }
 });
 
-// Cerrar modales
 closeModal.forEach(modal => {
-    modal.onclick = () => {
-        vaciarModal.style.display = 'none';
-    };
+    modal.onclick = () => { vaciarModal.style.display = 'none'; };
 });
 
 window.onclick = (e) => {
-    if (e.target === vaciarModal) {
-        vaciarModal.style.display = 'none';
-    }
+    if (e.target === vaciarModal) vaciarModal.style.display = 'none';
 };
 
 // ==================== INICIALIZACIÓN ====================
