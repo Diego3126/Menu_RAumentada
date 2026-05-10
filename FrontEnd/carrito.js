@@ -395,24 +395,46 @@ cancelarVaciarBtn?.addEventListener('click', () => {
     vaciarModal.style.display = 'none';
 });
 
-// MRA-117: Confirmar pedido con manejo de errores completo
+// Confirmar pedido — lee datos del formulario, sin necesidad de login
 continuarPedidoBtn?.addEventListener('click', async () => {
     if (carritoItems.length === 0) {
         mostrarNotificacion('Tu carrito está vacío. Agrega algunos platos primero.', 'warning');
         return;
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-        mostrarNotificacion('Debes iniciar sesión para confirmar tu pedido.', 'warning', 5000);
-        setTimeout(() => { window.location.href = '/login.html'; }, 1500);
+    // Leer datos del formulario de cliente
+    const nombreInput    = document.getElementById('clienteNombre');
+    const telefonoInput  = document.getElementById('clienteTelefono');
+    const emailInput     = document.getElementById('clienteEmail');
+    const notasInput     = document.getElementById('clienteNotas');
+
+    const nombre_cliente    = nombreInput?.value.trim()   || '';
+    const telefono_cliente  = telefonoInput?.value.trim() || '';
+    const email_cliente     = emailInput?.value.trim()    || '';
+    const notas             = notasInput?.value.trim()    || '';
+
+    // Validar nombre (único campo obligatorio)
+    if (!nombre_cliente || nombre_cliente.length < 2) {
+        nombreInput?.classList.add('error-campo');
+        nombreInput?.focus();
+        mostrarNotificacion('Por favor ingresa tu nombre para continuar.', 'warning', 4000);
         return;
     }
+    nombreInput?.classList.remove('error-campo');
 
-    const usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
-    const nombre_cliente = usuarioGuardado.nombre || 'Cliente';
-    const email_cliente  = usuarioGuardado.email  || '';
+    // Validar email si fue ingresado
+    if (email_cliente) {
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email_cliente);
+        if (!emailOk) {
+            emailInput?.classList.add('error-campo');
+            emailInput?.focus();
+            mostrarNotificacion('El email ingresado no es válido.', 'warning', 4000);
+            return;
+        }
+        emailInput?.classList.remove('error-campo');
+    }
 
+    // Calcular totales
     let subtotal = 0;
     carritoItems.forEach(item => {
         subtotal += item.cantidad * parseFloat(item.plato_precio);
@@ -437,39 +459,34 @@ continuarPedidoBtn?.addEventListener('click', async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
                 'x-session-id': sessionId
+                // Sin Authorization — clientes no necesitan login
             },
             body: JSON.stringify({
-                items, nombre_cliente, email_cliente,
-                telefono_cliente: '', notas: '', subtotal, total
+                items,
+                nombre_cliente,
+                telefono_cliente,
+                email_cliente,
+                notas,
+                subtotal,
+                total
             })
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // MRA-117: Confirmación visual antes de redirigir
             mostrarNotificacion(`¡Pedido #${data.pedido.codigo} registrado! Redirigiendo...`, 'success', 3000);
             setTimeout(() => {
                 window.location.href = `confirmacion.html?codigo=${data.pedido.codigo}`;
             }, 1200);
 
-        } else if (response.status === 401) {
-            // MRA-117: Token expirado — limpiar sesión y redirigir
-            mostrarNotificacion('Tu sesión expiró. Inicia sesión de nuevo.', 'warning', 4000);
-            localStorage.removeItem('token');
-            localStorage.removeItem('usuario');
-            setTimeout(() => { window.location.href = '/login.html'; }, 2000);
-
         } else if (response.status === 400 && data.detalles) {
-            // MRA-117: Errores de validación del backend — mostrar cada uno
             data.detalles.forEach((err, i) => {
                 setTimeout(() => mostrarNotificacion(err, 'error', 5000), i * 300);
             });
 
         } else {
-            // MRA-117: Error genérico del servidor
             mostrarNotificacion(
                 data.error || 'No se pudo registrar el pedido. Intenta de nuevo.',
                 'error'
@@ -478,7 +495,6 @@ continuarPedidoBtn?.addEventListener('click', async () => {
 
     } catch (error) {
         console.error('Error al confirmar pedido:', error);
-        // MRA-117: Distinguir error de red vs error inesperado
         if (error instanceof TypeError && error.message === 'Failed to fetch') {
             mostrarNotificacion('Sin conexión. Verifica tu internet e intenta de nuevo.', 'error', 5000);
         } else {
