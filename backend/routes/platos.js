@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/neon');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireAuth, requireAdmin } = require('./auth'); // ← unificado con nuestro sistema
 
 // Obtener todos los platos (público)
 router.get('/', async (req, res) => {
@@ -20,7 +20,6 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        // Obtener plato
         const platoResult = await pool.query(
             'SELECT id, nombre, descripcion, precio, categoria FROM platos WHERE id = $1',
             [id]
@@ -30,7 +29,6 @@ router.get('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Plato no encontrado' });
         }
 
-        // Obtener ingredientes base del plato
         const ingredientesResult = await pool.query(
             `SELECT i.id, i.nombre, i.categoria, i.precio_extra 
              FROM ingredientes i
@@ -39,7 +37,6 @@ router.get('/:id', async (req, res) => {
             [id]
         );
 
-        // Obtener todos los ingredientes adicionales disponibles
         const adicionalesResult = await pool.query(
             `SELECT id, nombre, categoria, precio_extra 
              FROM ingredientes 
@@ -58,8 +55,8 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Crear nuevo plato — requiere rol ADMIN
-router.post('/', authenticateToken, requireRole('ADMIN'), async (req, res) => {
+// Crear nuevo plato — solo admin
+router.post('/', requireAdmin, async (req, res) => {
     const { nombre, descripcion, precio, categoria } = req.body;
     try {
         const result = await pool.query(
@@ -73,9 +70,8 @@ router.post('/', authenticateToken, requireRole('ADMIN'), async (req, res) => {
     }
 });
 
-module.exports = router;
-// Actualizar precio (ADMIN)
-router.put('/:id/precio', authenticateToken, requireRole('ADMIN'), async (req, res) => {
+// Actualizar precio — solo admin
+router.put('/:id/precio', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { nuevoPrecio } = req.body;
     try {
@@ -91,8 +87,8 @@ router.put('/:id/precio', authenticateToken, requireRole('ADMIN'), async (req, r
     }
 });
 
-// Eliminar plato (ADMIN)
-router.delete('/:id', authenticateToken, requireRole('ADMIN'), async (req, res) => {
+// Eliminar plato — solo admin
+router.delete('/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     try {
         const result = await pool.query('DELETE FROM platos WHERE id = $1 RETURNING *', [parseInt(id)]);
@@ -103,3 +99,5 @@ router.delete('/:id', authenticateToken, requireRole('ADMIN'), async (req, res) 
         res.status(500).json({ error: 'Error al eliminar plato' });
     }
 });
+
+module.exports = router;
