@@ -57,16 +57,61 @@ router.get('/:id', async (req, res) => {
 
 // Crear nuevo plato — solo admin
 router.post('/', requireAdmin, async (req, res) => {
-    const { nombre, descripcion, precio, categoria } = req.body;
+    const { nombre, descripcion, precio, categoria, imagen_url, ingredientes } = req.body;
+
+    if (!nombre || !precio) {
+        return res.status(400).json({ error: 'Nombre y precio son obligatorios' });
+    }
+
+    const client = await pool.connect();
     try {
-        const result = await pool.query(
-            'INSERT INTO platos (nombre, descripcion, precio, categoria) VALUES ($1, $2, $3, $4) RETURNING id, nombre, descripcion, precio, categoria',
-            [nombre, descripcion, precio, categoria]
+        await client.query('BEGIN');
+
+        const result = await client.query(
+            'INSERT INTO platos (nombre, descripcion, precio, categoria, imagen_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, nombre, descripcion, precio, categoria, imagen_url',
+            [nombre, descripcion || '', parseFloat(precio), categoria || '', imagen_url || '']
         );
-        res.status(201).json(result.rows[0]);
+        const plato = result.rows[0];
+
+        // Insertar ingredientes base si vienen en el body
+        if (Array.isArray(ingredientes) && ingredientes.length > 0) {
+            for (const ing of ingredientes) {
+                const nombreIng = typeof ing === 'string' ? ing.trim() : ing.nombre?.trim();
+                if (!nombreIng) continue;
+
+                // Buscar o crear el ingrediente en la tabla ingredientes
+                const ingExistente = await client.query(
+                    'SELECT id FROM ingredientes WHERE LOWER(nombre) = LOWER($1) LIMIT 1',
+                    [nombreIng]
+                );
+
+                let ingId;
+                if (ingExistente.rows.length > 0) {
+                    ingId = ingExistente.rows[0].id;
+                } else {
+                    const nuevoIng = await client.query(
+                        "INSERT INTO ingredientes (nombre, categoria, precio_extra) VALUES ($1, 'base', 0) RETURNING id",
+                        [nombreIng]
+                    );
+                    ingId = nuevoIng.rows[0].id;
+                }
+
+                // Asociar ingrediente al plato
+                await client.query(
+                    'INSERT INTO plato_ingredientes_base (plato_id, ingrediente_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                    [plato.id, ingId]
+                );
+            }
+        }
+
+        await client.query('COMMIT');
+        res.status(201).json(plato);
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error(error);
         res.status(500).json({ error: 'Error al crear plato' });
+    } finally {
+        client.release();
     }
 });
 

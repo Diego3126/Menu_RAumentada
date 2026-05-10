@@ -1,5 +1,7 @@
 // Configuración de la API
-const API_URL = 'http://localhost:3000/api';
+const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000/api'
+    : '/api';
 
 // Variables globales
 let allPlatos = [];           // Todos los platos desde la API

@@ -239,9 +239,9 @@
 
             const pedidos = await res.json();
 
-            // Filtrar: cocina solo ve pendientes y en proceso
+            // Filtrar: cocina solo ve pendientes y en preparacion
             const activos = pedidos.filter(p =>
-                p.estado === 'pendiente' || p.estado === 'en proceso'
+                p.estado === 'pendiente' || p.estado === 'en_preparacion'
             );
 
             document.getElementById('ultimaActualizacion').textContent =
@@ -257,10 +257,10 @@
             }
 
             grid.innerHTML = activos.map(p => `
-                <div class="pedido-card ${p.estado.replace(' ', '-')}" id="card-${p.id}">
+                <div class="pedido-card ${p.estado === 'en_preparacion' ? 'en-proceso' : p.estado}" id="card-${p.id}">
                     <div class="pedido-header">
                         <span class="pedido-codigo">#${p.codigo_pedido}</span>
-                        <span class="estado-badge badge-${p.estado.replace(' ', '-')}">${p.estado}</span>
+                        <span class="estado-badge badge-${p.estado === 'en_preparacion' ? 'en-proceso' : p.estado}">${p.estado === 'en_preparacion' ? 'En preparación' : p.estado}</span>
                     </div>
                     <div class="pedido-cliente">
                         <i class="fas fa-user" style="font-size:0.75rem;margin-right:0.3rem;"></i>
@@ -273,7 +273,7 @@
                     </div>
                     <div class="pedido-actions">
                         ${p.estado === 'pendiente' ? `
-                            <button class="btn-accion btn-proceso" onclick="cambiarEstado(${p.id}, 'en proceso')">
+                            <button class="btn-accion btn-proceso" onclick="cambiarEstado(${p.id}, 'en_preparacion')">
                                 <i class="fas fa-fire"></i> En proceso
                             </button>` : ''}
                         <button class="btn-accion btn-listo" onclick="cambiarEstado(${p.id}, 'listo')">
@@ -305,7 +305,7 @@
             });
             cargarPedidos();
         } catch (err) {
-            alert('No se pudo actualizar el estado. Intenta de nuevo.');
+            console.error('No se pudo actualizar el estado:', err);
         }
     }
 
