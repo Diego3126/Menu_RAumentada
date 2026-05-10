@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/neon');
+const { requireAuth, requireAdmin } = require('./auth'); // ← unificado con nuestro sistema
 
-// Obtener todos los platos
+// Obtener todos los platos (público)
 router.get('/', async (req, res) => {
     try {
         const result = await pool.query(
@@ -15,11 +16,10 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Obtener plato con sus ingredientes base
+// Obtener plato con sus ingredientes base (público)
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        // Obtener plato
         const platoResult = await pool.query(
             'SELECT id, nombre, descripcion, precio, categoria FROM platos WHERE id = $1',
             [id]
@@ -29,7 +29,6 @@ router.get('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Plato no encontrado' });
         }
 
-        // Obtener ingredientes base del plato
         const ingredientesResult = await pool.query(
             `SELECT i.id, i.nombre, i.categoria, i.precio_extra 
              FROM ingredientes i
@@ -38,7 +37,6 @@ router.get('/:id', async (req, res) => {
             [id]
         );
 
-        // Obtener todos los ingredientes adicionales disponibles
         const adicionalesResult = await pool.query(
             `SELECT id, nombre, categoria, precio_extra 
              FROM ingredientes 
@@ -54,6 +52,51 @@ router.get('/:id', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error al obtener plato' });
+    }
+});
+
+// Crear nuevo plato — solo admin
+router.post('/', requireAdmin, async (req, res) => {
+    const { nombre, descripcion, precio, categoria } = req.body;
+    try {
+        const result = await pool.query(
+            'INSERT INTO platos (nombre, descripcion, precio, categoria) VALUES ($1, $2, $3, $4) RETURNING id, nombre, descripcion, precio, categoria',
+            [nombre, descripcion, precio, categoria]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al crear plato' });
+    }
+});
+
+// Actualizar precio — solo admin
+router.put('/:id/precio', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { nuevoPrecio } = req.body;
+    try {
+        const result = await pool.query(
+            'UPDATE platos SET precio = $1 WHERE id = $2 RETURNING id, nombre, descripcion, precio, categoria',
+            [parseFloat(nuevoPrecio), parseInt(id)]
+        );
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Plato no encontrado' });
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al actualizar precio' });
+    }
+});
+
+// Eliminar plato — solo admin
+router.delete('/:id', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query('DELETE FROM platos WHERE id = $1 RETURNING *', [parseInt(id)]);
+        if (result.rows.length === 0) return res.status(404).json({ error: 'Plato no encontrado' });
+        res.json({ success: true, deleted: result.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al eliminar plato' });
     }
 });
 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin — Usuarios</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-brand">🍽️ Admin Panel</div>
+        <div id="userInfo"></div>
+    </nav>
+
+    <main class="main">
+        <div class="page-header">
+            <h1>Gestión de Usuarios</h1>
+            <p>Lista, crea y asigna roles a los usuarios del sistema.</p>
+        </div>
+
+        <section>
+            <h2>Crear usuario</h2>
+            <form id="formCrearUsuario">
+                <input id="u_nombre" placeholder="Nombre" required>
+                <input id="u_email" placeholder="Email" type="email" required>
+                <input id="u_password" placeholder="Password" type="password" required>
+                <select id="u_rol">
+                    <option value="cocinero">cocinero</option>
+                    <option value="admin">admin</option>
+                </select>
+                <button type="submit">Crear usuario</button>
+            </form>
+            <div id="crearFeedback" role="status"></div>
+        </section>
+
+        <section>
+            <h2>Lista de usuarios</h2>
+            <div class="tabla-wrap">
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="usuariosTableBody">
+                        <tr><td colspan="5" class="empty-state">Cargando usuarios...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="auth-helper.js"></script>
+    <script src="toast.js"></script>
+    <script src="usuarios.js"></script>
+</body>
+</html>

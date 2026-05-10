@@ -36,7 +36,7 @@ router.post('/session', async (req, res) => {
     let dish = null;
 
     if (dishId) {
-      const dishResponse = await fetch(`${backendApiUrl}/dishes/${encodeURIComponent(dishId)}`, {
+      const dishResponse = await fetch(`${backendApiUrl}/platos/${encodeURIComponent(dishId)}`, {
         headers: {
           'ngrok-skip-browser-warning': 'true'
         }
@@ -50,10 +50,10 @@ router.post('/session', async (req, res) => {
       }
 
       const dishData = await dishResponse.json();
-      dish = dishData.data;
+      dish = dishData.plato;
     }
 
-    const modelPath = dish?.modelPath || fallbackModelPath;
+    const modelPath = dish?.model_path || fallbackModelPath;
 
     if (!modelPath) {
       return res.status(422).json({
