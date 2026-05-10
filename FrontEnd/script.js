@@ -241,8 +241,10 @@ function renderDishes() {
 function openAR3DViewer(plato) {
     arModal.style.display = 'flex';
 
-    // Determinar ruta del modelo 3D
-    const modelPath = `/models/${sanitizeName(plato.nombre)}.glb` || '/models/default.glb';
+    // Usar model_path de la BD; si no tiene, intentar por nombre sanitizado como fallback
+    const modelPath = plato.model_path
+        ? `/models/${plato.model_path}`
+        : `/models/${sanitizeName(plato.nombre)}.glb`;
 
     // Cargar modelo en el visor (si ra-service no está disponible muestra placeholder)
     if (viewer3D) {
@@ -278,9 +280,19 @@ function openAR3DViewer(plato) {
 function sanitizeName(name) {
     return name
         .toLowerCase()
+        // Reemplazar tildes y caracteres especiales del español ANTES de eliminar símbolos
+        .replace(/[áàäâ]/g, 'a')
+        .replace(/[éèëê]/g, 'e')
+        .replace(/[íìïî]/g, 'i')
+        .replace(/[óòöô]/g, 'o')
+        .replace(/[úùüû]/g, 'u')
+        .replace(/ñ/g, 'n')
+        .replace(/ç/g, 'c')
+        // Eliminar el resto de caracteres especiales
         .replace(/[^\w\s-]/g, '')
         .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
+        .replace(/-+/g, '-')
+        .trim();
 }
 
 // ==================== FUNCIONES DE REALIDAD AUMENTADA ====================

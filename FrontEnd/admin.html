@@ -426,6 +426,68 @@
         .btn-cancelar-precio { background: rgba(255,255,255,0.06); color: rgba(240,235,227,0.5); border: 1px solid rgba(255,255,255,0.1) !important; }
         .btn-cancelar-precio:hover { background: rgba(255,255,255,0.1); }
 
+        /* ── Upload modelo 3D ── */
+        .modelo-upload-area {
+            border: 2px dashed rgba(255,140,66,0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255,140,66,0.03);
+            position: relative;
+        }
+        .modelo-upload-area:hover,
+        .modelo-upload-area.drag-over {
+            border-color: rgba(255,140,66,0.7);
+            background: rgba(255,140,66,0.07);
+        }
+        .modelo-upload-area input[type="file"] {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .modelo-upload-area .upload-icon {
+            font-size: 1.5rem; color: rgba(255,140,66,0.5); margin-bottom: 0.4rem;
+        }
+        .modelo-upload-area .upload-text {
+            font-size: 0.82rem; color: rgba(240,235,227,0.4); line-height: 1.4;
+        }
+        .modelo-preview {
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            margin-top: 0.6rem;
+            background: rgba(255,140,66,0.08);
+            border: 1px solid rgba(255,140,66,0.2);
+            border-radius: 8px;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.82rem;
+        }
+        .modelo-preview i { color: #ff8c42; }
+        .modelo-preview span { flex: 1; color: rgba(240,235,227,0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .modelo-preview .quitar-modelo {
+            cursor: pointer; color: rgba(240,235,227,0.3);
+            font-size: 1rem; transition: color 0.15s; flex-shrink: 0;
+        }
+        .modelo-preview .quitar-modelo:hover { color: #ff8f8f; }
+
+        /* Columna modelo en tabla de platos */
+        .modelo-badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            font-size: 0.75rem; padding: 0.2rem 0.55rem;
+            border-radius: 20px;
+        }
+        .modelo-badge.con-modelo {
+            background: rgba(255,140,66,0.12);
+            color: #ffa96a;
+            border: 1px solid rgba(255,140,66,0.2);
+        }
+        .modelo-badge.sin-modelo {
+            background: rgba(255,255,255,0.05);
+            color: rgba(240,235,227,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
         @media (max-width: 768px) {
             nav { padding: 0 1rem; }
             .nav-links { display: none; }
@@ -560,7 +622,35 @@
                 </div>
             </div>
 
-            <!-- Fila 3: ingredientes base (tags) -->
+            <!-- Fila 3: modelo 3D -->
+            <div class="form-row-2">
+                <div class="form-field">
+                    <label>Modelo 3D <span style="color:rgba(240,235,227,0.3);font-size:0.7rem;">(opcional · .glb)</span></label>
+                    <div class="modelo-upload-area" id="modeloUploadArea">
+                        <input type="file" id="p_modelo" accept=".glb,.gltf">
+                        <div class="upload-icon"><i class="fas fa-cube"></i></div>
+                        <div class="upload-text">
+                            Arrastra el archivo .glb aquí<br>
+                            <span style="color:rgba(255,140,66,0.6);">o haz clic para seleccionar</span>
+                        </div>
+                    </div>
+                    <div class="modelo-preview" id="modeloPreview">
+                        <i class="fas fa-cube"></i>
+                        <span id="modeloNombre">archivo.glb</span>
+                        <span class="quitar-modelo" id="quitarModelo">×</span>
+                    </div>
+                </div>
+                <div class="form-field" style="display:flex;align-items:center;padding-top:1.4rem;">
+                    <p style="font-size:0.78rem;color:rgba(240,235,227,0.3);line-height:1.6;">
+                        <i class="fas fa-circle-info" style="color:rgba(255,140,66,0.5);"></i>
+                        El modelo 3D se mostrará al cliente cuando use la función de
+                        <strong style="color:rgba(255,140,66,0.6);">Realidad Aumentada</strong>
+                        en el menú.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Fila 4: ingredientes base (tags) -->
             <div class="form-field">
                 <label>Ingredientes base</label>
                 <div class="tags-input-box" id="tagsBox">
@@ -585,6 +675,7 @@
                             <th>Nombre</th>
                             <th>Categoría</th>
                             <th>Precio</th>
+                            <th>Modelo 3D</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -691,6 +782,19 @@
                                     <i class="fas fa-times"></i>
                                 </button>
                             </span>
+                        </td>
+                        <td>
+                            ${p.model_path
+                                ? `<span class="modelo-badge con-modelo"><i class="fas fa-cube"></i> ${p.model_path}</span>`
+                                : `<span class="modelo-badge sin-modelo"><i class="fas fa-cube"></i> Sin modelo</span>`}
+                            <br>
+                            <label style="cursor:pointer;margin-top:0.3rem;display:inline-block;">
+                                <input type="file" accept=".glb,.gltf" style="display:none"
+                                    onchange="subirModeloAPlato(${p.id}, this)">
+                                <span style="font-size:0.72rem;color:rgba(255,140,66,0.7);text-decoration:underline;text-underline-offset:2px;">
+                                    ${p.model_path ? 'Cambiar .glb' : 'Subir .glb'}
+                                </span>
+                            </label>
                         </td>
                         <td>
                             <button class="btn-editar-precio" onclick="activarEditarPrecio(${p.id})">
@@ -840,7 +944,77 @@
         // Clic en el box → enfocar input
         tagsBox.addEventListener('click', () => tagInput.focus());
 
-        // ── Crear plato ────────────────────────────────────────
+        // ── Drag & drop / preview del modelo 3D ───────────────
+        let modeloArchivo = null;
+
+        const modeloArea    = document.getElementById('modeloUploadArea');
+        const modeloInput   = document.getElementById('p_modelo');
+        const modeloPrev    = document.getElementById('modeloPreview');
+        const modeloNombre  = document.getElementById('modeloNombre');
+        const quitarModelo  = document.getElementById('quitarModelo');
+
+        function mostrarModeloPreview(file) {
+            modeloArchivo = file;
+            modeloNombre.textContent = file.name;
+            modeloPrev.style.display = 'flex';
+            modeloArea.querySelector('.upload-icon').style.color = 'rgba(255,140,66,0.8)';
+        }
+
+        function limpiarModelo() {
+            modeloArchivo = null;
+            modeloInput.value = '';
+            modeloPrev.style.display = 'none';
+            modeloArea.querySelector('.upload-icon').style.color = 'rgba(255,140,66,0.5)';
+        }
+
+        modeloInput.addEventListener('change', () => {
+            if (modeloInput.files[0]) mostrarModeloPreview(modeloInput.files[0]);
+        });
+
+        quitarModelo.addEventListener('click', limpiarModelo);
+
+        // Drag & drop visual
+        modeloArea.addEventListener('dragover', e => { e.preventDefault(); modeloArea.classList.add('drag-over'); });
+        modeloArea.addEventListener('dragleave', () => modeloArea.classList.remove('drag-over'));
+        modeloArea.addEventListener('drop', e => {
+            e.preventDefault();
+            modeloArea.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && (file.name.endsWith('.glb') || file.name.endsWith('.gltf'))) {
+                mostrarModeloPreview(file);
+            } else if (file) {
+                mostrarResultado('Solo se aceptan archivos .glb o .gltf', 'error');
+            }
+        });
+
+        // ── Subir modelo a un plato existente desde la tabla ──
+        window.subirModeloAPlato = async (platoId, inputEl) => {
+            const file = inputEl.files[0];
+            if (!file) return;
+
+            const fd = new FormData();
+            fd.append('modelo', file);
+            fd.append('plato_id', platoId);
+
+            try {
+                const res = await fetch(`${API_URL}/platos/upload-model`, {
+                    method: 'POST',
+                    headers,   // sin Content-Type: multer lo maneja
+                    body: fd
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    mostrarResultado(`✅ ${data.mensaje}`, 'exito');
+                    cargarPlatos();
+                } else {
+                    mostrarResultado(data.error || 'Error al subir el modelo.', 'error');
+                }
+            } catch {
+                mostrarResultado('Error de conexión al subir el modelo.', 'error');
+            }
+        };
+
+        // ── Crear plato (con modelo 3D opcional) ──────────────
         document.getElementById('btnCrearPlato').addEventListener('click', async () => {
             const nombre      = document.getElementById('p_nombre').value.trim();
             const precio      = parseFloat(document.getElementById('p_precio').value);
@@ -848,51 +1022,70 @@
             const descripcion = document.getElementById('p_descripcion').value.trim();
             const imagen_url  = document.getElementById('p_imagen').value.trim();
 
-            // Capturar tag pendiente de escribir
             if (tagInput.value.trim()) agregarTag(tagInput.value);
 
-            if (!nombre)          { mostrarResultado('El nombre es obligatorio.', 'error'); return; }
-            if (!precio || precio <= 0) { mostrarResultado('Ingresa un precio válido.', 'error'); return; }
+            if (!nombre)               { mostrarResultado('El nombre es obligatorio.', 'error'); return; }
+            if (!precio || precio <= 0){ mostrarResultado('Ingresa un precio válido.', 'error'); return; }
 
             const btn = document.getElementById('btnCrearPlato');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Creando...';
 
             try {
+                // Paso 1: crear el plato con JSON
                 const res = await fetch(`${API_URL}/platos`, {
                     method: 'POST',
                     headers: { ...headers, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nombre,
-                        precio,
-                        categoria,
-                        descripcion,
-                        imagen_url,
-                        ingredientes: [...tags]
-                    })
+                    body: JSON.stringify({ nombre, precio, categoria, descripcion, imagen_url, ingredientes: [...tags] })
                 });
 
-                if (res.ok) {
-                    const data = await res.json();
-                    const ingMsg = tags.length > 0
-                        ? ` con ${tags.length} ingrediente(s) base`
-                        : '';
-                    mostrarResultado(`✅ Plato "${data.nombre}" creado${ingMsg}.`, 'exito');
-
-                    // Limpiar formulario
-                    document.getElementById('p_nombre').value      = '';
-                    document.getElementById('p_precio').value      = '';
-                    document.getElementById('p_categoria').value   = '';
-                    document.getElementById('p_descripcion').value = '';
-                    document.getElementById('p_imagen').value      = '';
-                    document.getElementById('imgPreviewWrap').style.display = 'none';
-                    tags.length = 0;
-                    renderTags();
-                    cargarPlatos();
-                } else {
+                if (!res.ok) {
                     const err = await res.json();
                     mostrarResultado(err.error || 'Error al crear el plato.', 'error');
+                    return;
                 }
+
+                const data = await res.json();
+
+                // Paso 2: si tiene modelo, subirlo y asignarlo
+                if (modeloArchivo) {
+                    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Subiendo modelo...';
+                    const fd = new FormData();
+                    fd.append('modelo', modeloArchivo);
+                    fd.append('plato_id', data.id);
+
+                    const resModelo = await fetch(`${API_URL}/platos/upload-model`, {
+                        method: 'POST',
+                        headers,
+                        body: fd
+                    });
+
+                    const dataModelo = await resModelo.json();
+                    if (!resModelo.ok) {
+                        // El plato se creó pero el modelo falló — avisar sin error fatal
+                        mostrarResultado(
+                            `⚠️ Plato "${data.nombre}" creado, pero el modelo no se pudo subir: ${dataModelo.error}`,
+                            'error'
+                        );
+                        cargarPlatos();
+                        return;
+                    }
+                }
+
+                const ingMsg    = tags.length > 0 ? ` con ${tags.length} ingrediente(s)` : '';
+                const modeloMsg = modeloArchivo   ? ' y modelo 3D' : '';
+                mostrarResultado(`✅ Plato "${data.nombre}" creado${ingMsg}${modeloMsg}.`, 'exito');
+
+                // Limpiar formulario completo
+                ['p_nombre','p_precio','p_categoria','p_descripcion','p_imagen'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                document.getElementById('imgPreviewWrap').style.display = 'none';
+                tags.length = 0;
+                renderTags();
+                limpiarModelo();
+                cargarPlatos();
+
             } catch {
                 mostrarResultado('Error de conexión.', 'error');
             } finally {

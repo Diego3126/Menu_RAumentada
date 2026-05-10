@@ -39,6 +39,8 @@ app.use(express.json());
 
 // Servir archivos estáticos del frontend
 app.use(express.static(path.join(__dirname, '../FrontEnd')));
+// Servir modelos 3D desde uploads/models/ → accesibles como /models/nombre.glb
+app.use('/models', express.static(path.join(__dirname, '../uploads/models')));
 
 // ==================== RUTAS PÚBLICAS ====================
 // Estas rutas NO requieren autenticación
