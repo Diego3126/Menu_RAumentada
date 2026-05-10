@@ -400,6 +400,33 @@ main {
     margin: 1rem 0;
 }
 
+/* Toast notifications */
+.toast-container {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    z-index: 2000;
+}
+.toast {
+    min-width: 220px;
+    max-width: 360px;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    color: white;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: #4caf50; }
+.toast.error   { background: #f44336; }
+.toast.info    { background: #2196f3; }
+
 .resumen-item {
     display: flex;
     justify-content: space-between;
