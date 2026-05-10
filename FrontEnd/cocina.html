@@ -217,37 +217,46 @@
 
 <script src="auth-helper.js"></script>
 <script>
-    // MRA-66: Solo cocineros
+    // MRA-119: MRA-66: Solo cocineros pueden acceder a esta vista
     const usuario = requireRol('cocinero');
     if (usuario) {
         renderUserInfo(usuario);
         cargarPedidos();
-        // Auto-refresh cada 30 segundos
+        // MRA-122: Auto-refresh cada 30 segundos para ver pedidos nuevos
         setInterval(cargarPedidos, 30000);
     }
 
+    // MRA-122: Cargar y mostrar pedidos visibles para cocina
     async function cargarPedidos() {
         const token = localStorage.getItem('token');
         const grid  = document.getElementById('pedidosGrid');
 
         try {
+            // MRA-120: GET /api/pedidos — backend filtra por rol automáticamente
             const res = await fetch(`${API_URL}/pedidos`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            if (!res.ok) throw new Error('Error al cargar pedidos');
+            // MRA-126: Manejo de errores de auth
+            if (res.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('usuario');
+                window.location.href = '/login';
+                return;
+            }
 
-            const pedidos = await res.json();
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
             // Filtrar: cocina solo ve pendientes y en preparacion
             const activos = pedidos.filter(p =>
                 p.estado === 'pendiente' || p.estado === 'en_preparacion'
             );
+            const pedidos = await res.json();
 
             document.getElementById('ultimaActualizacion').textContent =
                 `Última actualización: ${new Date().toLocaleTimeString('es-CO')}`;
 
-            if (activos.length === 0) {
+            if (pedidos.length === 0) {
                 grid.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-check-circle" style="color:#81c784"></i>
@@ -256,46 +265,76 @@
                 return;
             }
 
-            grid.innerHTML = activos.map(p => `
-                <div class="pedido-card ${p.estado === 'en_preparacion' ? 'en-proceso' : p.estado}" id="card-${p.id}">
+            // MRA-122: Renderizar tarjeta con items detallados de cada pedido
+            grid.innerHTML = activos.map(p => {
+                const estadoClase = p.estado === 'en_preparacion' ? 'en-proceso' : p.estado;
+                const badgeClase  = p.estado === 'en_preparacion' ? 'en-proceso' : p.estado;
+                const estadoLabel = p.estado === 'en_preparacion' ? 'En preparación' : 
+                                    p.estado.charAt(0).toUpperCase() + p.estado.slice(1);
+
+                // MRA-122: Construir lista de items con personalizaciones
+                const itemsHtml = (p.items || []).map(item => {
+                    let extras = '';
+                    if (item.ingredientes_eliminados && item.ingredientes_eliminados !== 'Ninguno' && item.ingredientes_eliminados !== '')
+                        extras += `<span style="color:#ff6b6b;font-size:0.75rem;"> · Sin: ${item.ingredientes_eliminados}</span>`;
+                    if (item.ingredientes_agregados && item.ingredientes_agregados !== 'Ninguno' && item.ingredientes_agregados !== '')
+                        extras += `<span style="color:#81c784;font-size:0.75rem;"> · Extra: ${item.ingredientes_agregados}</span>`;
+                    return `<div style="padding:0.2rem 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <strong>×${item.cantidad}</strong> ${item.plato_nombre}${extras}
+                            </div>`;
+                }).join('') || '<div style="color:rgba(255,255,255,0.3);font-size:0.8rem;">Sin detalles</div>';
+
+                return `
+                <div class="pedido-card ${estadoClase}" id="card-${p.id}">
                     <div class="pedido-header">
                         <span class="pedido-codigo">#${p.codigo_pedido}</span>
-                        <span class="estado-badge badge-${p.estado === 'en_preparacion' ? 'en-proceso' : p.estado}">${p.estado === 'en_preparacion' ? 'En preparación' : p.estado}</span>
+                        <span class="estado-badge badge-${badgeClase}">${estadoLabel}</span>
                     </div>
                     <div class="pedido-cliente">
                         <i class="fas fa-user" style="font-size:0.75rem;margin-right:0.3rem;"></i>
                         ${p.nombre_cliente}
-                        ${p.notas ? `<br><i class="fas fa-note-sticky" style="font-size:0.75rem;margin-right:0.3rem;"></i><em>${p.notas}</em>` : ''}
+                        ${p.notas ? `<br><i class="fas fa-note-sticky" style="font-size:0.75rem;margin-right:0.3rem;"></i><em style="color:rgba(240,235,227,0.5);">${p.notas}</em>` : ''}
                     </div>
-                    <div class="pedido-items">
-                        Total: <strong style="color:#ff8c42">$${parseFloat(p.total || 0).toFixed(2)}</strong><br>
-                        Hace: ${tiempoTranscurrido(p.created_at)}
+                    <div class="pedido-items">${itemsHtml}</div>
+                    <div style="font-size:0.78rem;color:rgba(240,235,227,0.4);margin-bottom:0.8rem;">
+                        <i class="fas fa-clock" style="margin-right:0.3rem;"></i>${tiempoTranscurrido(p.created_at)}
+                        &nbsp;·&nbsp; Total: <strong style="color:#ff8c42">$${parseFloat(p.total || 0).toFixed(2)}</strong>
                     </div>
                     <div class="pedido-actions">
                         ${p.estado === 'pendiente' ? `
-                            <button class="btn-accion btn-proceso" onclick="cambiarEstado(${p.id}, 'en_preparacion')">
-                                <i class="fas fa-fire"></i> En proceso
+                            <button class="btn-accion btn-proceso" onclick="cambiarEstado(${p.id}, 'en_preparacion', this)">
+                                <i class="fas fa-fire"></i> En preparación
                             </button>` : ''}
-                        <button class="btn-accion btn-listo" onclick="cambiarEstado(${p.id}, 'listo')">
+                        <button class="btn-accion btn-listo" onclick="cambiarEstado(${p.id}, 'listo', this)">
                             <i class="fas fa-check"></i> Listo
                         </button>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
 
         } catch (err) {
+            console.error('Error al cargar pedidos:', err);
             grid.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-triangle-exclamation" style="color:#ff5c5c"></i>
                     Error al cargar pedidos. ¿Está el servidor corriendo?
+                    <br><br>
+                    <button onclick="cargarPedidos()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-family:inherit;">
+                        <i class="fas fa-redo"></i> Reintentar
+                    </button>
                 </div>`;
         }
     }
 
-    async function cambiarEstado(pedidoId, nuevoEstado) {
+    // MRA-120: Cambiar estado del pedido vía PATCH /api/pedidos/:id/estado
+    async function cambiarEstado(pedidoId, nuevoEstado, btnEl) {
         const token = localStorage.getItem('token');
+
+        // Deshabilitar botón mientras procesa
+        if (btnEl) { btnEl.disabled = true; btnEl.style.opacity = '0.5'; }
+
         try {
-            await fetch(`${API_URL}/pedidos/${pedidoId}/estado`, {
+            const res = await fetch(`${API_URL}/pedidos/${pedidoId}/estado`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -303,9 +342,24 @@
                 },
                 body: JSON.stringify({ estado: nuevoEstado })
             });
-            cargarPedidos();
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || `HTTP ${res.status}`);
+            }
+
+            // MRA-122: Actualizar vista sin recargar toda la página
+            await cargarPedidos();
+
         } catch (err) {
-            console.error('No se pudo actualizar el estado:', err);
+            console.error('Error al cambiar estado:', err);
+            if (btnEl) { btnEl.disabled = false; btnEl.style.opacity = '1'; }
+            // Mostrar error en pantalla sin alert()
+            const errDiv = document.createElement('div');
+            errDiv.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#2e1a1a;border:1px solid rgba(255,107,107,0.4);color:#ff6b6b;padding:0.8rem 1.2rem;border-radius:12px;font-size:0.88rem;z-index:999;';
+            errDiv.textContent = `No se pudo actualizar el estado: ${err.message}`;
+            document.body.appendChild(errDiv);
+            setTimeout(() => errDiv.remove(), 4000);
         }
     }
 
