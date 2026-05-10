@@ -10,13 +10,14 @@
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
+            background-image: none !important;
+            background-attachment: unset !important;
             min-height: 100vh;
             background: #0d0d0d;
             font-family: 'DM Sans', sans-serif;
             color: #f0ebe3;
         }
 
-        /* NAV */
         nav {
             background: rgba(13,13,13,0.95);
             backdrop-filter: blur(20px);
@@ -40,10 +41,7 @@
             gap: 0.6rem;
         }
 
-        .nav-links {
-            display: flex;
-            gap: 0.5rem;
-        }
+        .nav-links { display: flex; gap: 0.5rem; }
 
         .nav-link {
             padding: 0.45rem 1rem;
@@ -58,21 +56,43 @@
             font-family: inherit;
         }
 
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255,140,66,0.12);
-            color: #ff8c42;
+        .nav-link:hover { background: rgba(255,140,66,0.12); color: #ff8c42; }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 0 2rem;
+            background: rgba(13,13,13,0.6);
         }
 
-        /* MAIN */
+        .tab-btn {
+            padding: 0.85rem 1.4rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.88rem;
+            color: rgba(240,235,227,0.5);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover { color: rgba(240,235,227,0.8); }
+        .tab-btn.active { color: #ff8c42; border-bottom-color: #ff8c42; }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
         .main {
             max-width: 1100px;
             margin: 0 auto;
             padding: 2rem 1.5rem;
         }
 
-        .page-header {
-            margin-bottom: 2rem;
-        }
+        .page-header { margin-bottom: 2rem; }
 
         .page-header h1 {
             font-family: 'Playfair Display', serif;
@@ -80,12 +100,8 @@
             margin-bottom: 0.3rem;
         }
 
-        .page-header p {
-            color: rgba(240,235,227,0.5);
-            font-size: 0.9rem;
-        }
+        .page-header p { color: rgba(240,235,227,0.5); font-size: 0.9rem; }
 
-        /* STATS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -104,14 +120,10 @@
         }
 
         .stat-icon {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; flex-shrink: 0;
         }
 
         .stat-icon.naranja { background: rgba(255,140,66,0.15); }
@@ -119,22 +131,11 @@
         .stat-icon.azul    { background: rgba(64,156,255,0.15); }
         .stat-icon.morado  { background: rgba(156,39,176,0.15); }
 
-        .stat-value {
-            font-size: 1.6rem;
-            font-weight: 600;
-            line-height: 1;
-        }
+        .stat-value { font-size: 1.6rem; font-weight: 600; line-height: 1; }
+        .stat-label { font-size: 0.8rem; color: rgba(240,235,227,0.5); margin-top: 0.2rem; }
 
-        .stat-label {
-            font-size: 0.8rem;
-            color: rgba(240,235,227,0.5);
-            margin-top: 0.2rem;
-        }
-
-        /* TABLA PEDIDOS */
         .section-title {
-            font-size: 1rem;
-            font-weight: 500;
+            font-size: 1rem; font-weight: 500;
             margin-bottom: 1rem;
             color: rgba(240,235,227,0.8);
         }
@@ -147,10 +148,7 @@
             margin-bottom: 2rem;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: collapse; }
 
         thead th {
             padding: 0.9rem 1.2rem;
@@ -190,18 +188,117 @@
             color: rgba(240,235,227,0.3);
         }
 
-        /* RESPONSIVE MRA-69 */
+        /* Gestión de platos */
+        .card-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-section h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 1.2rem;
+            color: rgba(240,235,227,0.8);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 0.8rem;
+            align-items: end;
+        }
+
+        .form-field label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(240,235,227,0.4);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-field input {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            color: #f0ebe3;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-field input:focus {
+            border-color: #ff8c42;
+            box-shadow: 0 0 0 3px rgba(255,140,66,0.15);
+        }
+
+        .form-field input::placeholder { color: rgba(240,235,227,0.25); }
+
+        .btn-crear {
+            background: linear-gradient(135deg, #ff8c42, #e67e22);
+            border: none;
+            border-radius: 10px;
+            padding: 0.7rem 1.4rem;
+            color: white;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(255,140,66,0.25);
+        }
+
+        .btn-crear:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,140,66,0.35); }
+
+        .resultado-msg {
+            margin-top: 0.8rem;
+            font-size: 0.85rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .resultado-msg.exito { background: rgba(76,175,80,0.12); color: #81c784; border: 1px solid rgba(76,175,80,0.2); display: block; }
+        .resultado-msg.error { background: rgba(255,92,92,0.12); color: #ff8f8f; border: 1px solid rgba(255,92,92,0.2); display: block; }
+
+        .btn-eliminar {
+            background: rgba(255,92,92,0.12);
+            border: 1px solid rgba(255,92,92,0.2);
+            border-radius: 6px;
+            padding: 0.3rem 0.7rem;
+            color: #ff8f8f;
+            font-size: 0.78rem;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s;
+        }
+
+        .btn-eliminar:hover { background: rgba(255,92,92,0.22); }
+
         @media (max-width: 768px) {
             nav { padding: 0 1rem; }
             .nav-links { display: none; }
+            .tabs { padding: 0 1rem; overflow-x: auto; }
             .main { padding: 1.2rem 1rem; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
             .tabla-wrap { overflow-x: auto; }
             table { min-width: 500px; }
+            .form-row { grid-template-columns: 1fr 1fr; }
         }
 
         @media (max-width: 480px) {
             .stats-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -216,152 +313,252 @@
     <div id="userInfo"></div>
 </nav>
 
+<div class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">
+        <i class="fas fa-chart-line"></i> Dashboard
+    </button>
+    <button class="tab-btn" data-tab="platos">
+        <i class="fas fa-utensils"></i> Gestión de platos
+    </button>
+</div>
+
 <main class="main">
-    <div class="page-header">
-        <h1>Dashboard</h1>
-        <p id="saludo">Bienvenido al panel de administración</p>
+
+    <!-- TAB DASHBOARD -->
+    <div class="tab-panel active" id="tab-dashboard">
+        <div class="page-header">
+            <h1>Dashboard</h1>
+            <p id="saludo">Bienvenido al panel de administración</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon naranja">📋</div>
+                <div>
+                    <div class="stat-value" id="statPedidos">—</div>
+                    <div class="stat-label">Pedidos hoy</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon verde">⏳</div>
+                <div>
+                    <div class="stat-value" id="statPendientes">—</div>
+                    <div class="stat-label">Pendientes</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon azul">💰</div>
+                <div>
+                    <div class="stat-value" id="statTotal">—</div>
+                    <div class="stat-label">Total del día</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon morado">👤</div>
+                <div>
+                    <div class="stat-value" id="statUsuarios">—</div>
+                    <div class="stat-label">Usuarios</div>
+                </div>
+            </div>
+        </div>
+
+        <p class="section-title">Pedidos recientes</p>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaPedidos">
+                    <tr><td colspan="5" class="empty-state">Cargando pedidos...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- Stats -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon naranja">📋</div>
-            <div>
-                <div class="stat-value" id="statPedidos">—</div>
-                <div class="stat-label">Pedidos hoy</div>
-            </div>
+    <!-- TAB PLATOS -->
+    <div class="tab-panel" id="tab-platos">
+        <div class="page-header">
+            <h1>Gestión de platos</h1>
+            <p>Agrega o elimina platos del menú</p>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon verde">⏳</div>
-            <div>
-                <div class="stat-value" id="statPendientes">—</div>
-                <div class="stat-label">Pendientes</div>
+
+        <div class="card-section">
+            <h3><i class="fas fa-plus-circle" style="color:#ff8c42"></i> Crear nuevo plato</h3>
+            <div class="form-row">
+                <div class="form-field">
+                    <label>Nombre</label>
+                    <input type="text" id="p_nombre" placeholder="Ej: Hamburguesa clásica">
+                </div>
+                <div class="form-field">
+                    <label>Precio</label>
+                    <input type="number" id="p_precio" placeholder="18000" step="0.01" min="0">
+                </div>
+                <div class="form-field">
+                    <label>Categoría</label>
+                    <input type="text" id="p_categoria" placeholder="Ej: Hamburguesas">
+                </div>
+                <button class="btn-crear" id="btnCrearPlato">
+                    <i class="fas fa-plus"></i> Crear
+                </button>
             </div>
+            <div class="resultado-msg" id="resultadoCrear"></div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon azul">💰</div>
-            <div>
-                <div class="stat-value" id="statTotal">—</div>
-                <div class="stat-label">Total del día</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon morado">👤</div>
-            <div>
-                <div class="stat-value" id="statUsuarios">—</div>
-                <div class="stat-label">Usuarios</div>
+
+        <div class="card-section">
+            <h3><i class="fas fa-list" style="color:#ff8c42"></i> Platos del menú</h3>
+            <div class="tabla-wrap" style="margin-bottom:0">
+                <table>
+                    <thead>
+                        <tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Acción</th></tr>
+                    </thead>
+                    <tbody id="listaPlatos">
+                        <tr><td colspan="4" class="empty-state">Cargando platos...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Tabla pedidos -->
-    <p class="section-title">Pedidos recientes</p>
-    <div class="tabla-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Cliente</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-            <tbody id="tablaPedidos">
-                <tr><td colspan="5" class="empty-state">Cargando pedidos...</td></tr>
-            </tbody>
-        </table>
-    </div>
 </main>
 
 <script src="auth-helper.js"></script>
 <script>
-    // MRA-66: Proteger esta página — solo admins
-    const usuario = requireRol('admin');
-    if (usuario) {
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const usuario = requireRol('admin');
+        if (!usuario) return;
+
         renderUserInfo(usuario);
         document.getElementById('saludo').textContent =
             `Hola, ${usuario.nombre}. Aquí tienes el resumen del día.`;
-        cargarDatos();
-    }
 
-    async function cargarDatos() {
         const token = localStorage.getItem('token');
         const headers = { 'Authorization': `Bearer ${token}` };
 
-        try {
-            // Cargar pedidos
-            const resPedidos = await fetch(`${API_URL}/pedidos`, { headers });
-            if (resPedidos.ok) {
-                const pedidos = await resPedidos.json();
-                const hoy = new Date().toDateString();
-                const pedidosHoy = pedidos.filter(p =>
-                    new Date(p.created_at).toDateString() === hoy
-                );
-                const pendientes = pedidos.filter(p => p.estado === 'pendiente');
-                const totalDia   = pedidosHoy.reduce((s, p) => s + parseFloat(p.total || 0), 0);
+        // Tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+            });
+        });
 
-                document.getElementById('statPedidos').textContent   = pedidosHoy.length;
-                document.getElementById('statPendientes').textContent = pendientes.length;
-                document.getElementById('statTotal').textContent      = `$${totalDia.toFixed(0)}`;
+        // Dashboard
+        async function cargarDashboard() {
+            try {
+                const resPedidos = await fetch(`${API_URL}/pedidos`, { headers });
+                if (resPedidos.ok) {
+                    const pedidos = await resPedidos.json();
+                    const hoy = new Date().toDateString();
+                    const pedidosHoy = pedidos.filter(p => new Date(p.created_at).toDateString() === hoy);
+                    const pendientes = pedidos.filter(p => p.estado === 'pendiente');
+                    const totalDia   = pedidosHoy.reduce((s, p) => s + parseFloat(p.total || 0), 0);
 
-                // Render tabla
-                const tbody = document.getElementById('tablaPedidos');
-                if (pedidos.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Sin pedidos aún</td></tr>`;
-                } else {
-                    tbody.innerHTML = pedidos.slice(0, 10).map(p => `
-                        <tr>
-                            <td><strong>${p.codigo_pedido}</strong></td>
-                            <td>${p.nombre_cliente}</td>
-                            <td>$${parseFloat(p.total || 0).toFixed(2)}</td>
-                            <td><span class="estado-badge estado-${p.estado}">${p.estado}</span></td>
-                            <td>${new Date(p.created_at).toLocaleString('es-CO')}</td>
-                        </tr>
-                    `).join('');
+                    document.getElementById('statPedidos').textContent   = pedidosHoy.length;
+                    document.getElementById('statPendientes').textContent = pendientes.length;
+                    document.getElementById('statTotal').textContent      = `$${totalDia.toFixed(0)}`;
+
+                    const tbody = document.getElementById('tablaPedidos');
+                    tbody.innerHTML = pedidos.length === 0
+                        ? `<tr><td colspan="5" class="empty-state">Sin pedidos aún</td></tr>`
+                        : pedidos.slice(0, 10).map(p => `
+                            <tr>
+                                <td><strong>${p.codigo_pedido}</strong></td>
+                                <td>${p.nombre_cliente}</td>
+                                <td>$${parseFloat(p.total || 0).toFixed(2)}</td>
+                                <td><span class="estado-badge estado-${p.estado}">${p.estado}</span></td>
+                                <td>${new Date(p.created_at).toLocaleString('es-CO')}</td>
+                            </tr>`).join('');
                 }
-            }
 
-            // Cargar usuarios
-            const resUsuarios = await fetch(`${API_URL}/usuarios`, { headers });
-            if (resUsuarios.ok) {
-                const usuarios = await resUsuarios.json();
-                document.getElementById('statUsuarios').textContent = usuarios.length;
+                const resUsuarios = await fetch(`${API_URL}/usuarios`, { headers });
+                if (resUsuarios.ok) {
+                    const usuarios = await resUsuarios.json();
+                    document.getElementById('statUsuarios').textContent = usuarios.length;
+                }
+            } catch (err) {
+                console.error('Error cargando dashboard:', err);
             }
-
-        } catch (err) {
-            console.error('Error cargando datos:', err);
         }
-    }
+
+        // Platos
+        async function cargarPlatos() {
+            const tbody = document.getElementById('listaPlatos');
+            try {
+                const res = await fetch(`${API_URL}/platos`);
+                const platos = await res.json();
+
+                if (platos.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No hay platos aún</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = platos.map(p => `
+                    <tr>
+                        <td><strong>${p.nombre}</strong></td>
+                        <td>${p.categoria || '—'}</td>
+                        <td>$${parseFloat(p.precio).toFixed(2)}</td>
+                        <td><button class="btn-eliminar" data-id="${p.id}"><i class="fas fa-trash"></i> Eliminar</button></td>
+                    </tr>`).join('');
+
+                tbody.querySelectorAll('.btn-eliminar').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (!confirm('¿Eliminar este plato?')) return;
+                        const res = await fetch(`${API_URL}/platos/${btn.dataset.id}`, { method: 'DELETE', headers });
+                        if (res.ok) cargarPlatos();
+                        else mostrarResultado('Error al eliminar', 'error');
+                    });
+                });
+            } catch {
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Error al cargar platos</td></tr>`;
+            }
+        }
+
+        function mostrarResultado(msg, tipo) {
+            const el = document.getElementById('resultadoCrear');
+            el.textContent = msg;
+            el.className = `resultado-msg ${tipo}`;
+            setTimeout(() => { el.className = 'resultado-msg'; }, 3000);
+        }
+
+        document.getElementById('btnCrearPlato').addEventListener('click', async () => {
+            const nombre    = document.getElementById('p_nombre').value.trim();
+            const precio    = parseFloat(document.getElementById('p_precio').value);
+            const categoria = document.getElementById('p_categoria').value.trim();
+
+            if (!nombre || !precio) { mostrarResultado('Nombre y precio son obligatorios', 'error'); return; }
+
+            try {
+                const res = await fetch(`${API_URL}/platos`, {
+                    method: 'POST',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, precio, categoria })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    mostrarResultado(`✅ Plato "${data.nombre}" creado`, 'exito');
+                    document.getElementById('p_nombre').value = '';
+                    document.getElementById('p_precio').value = '';
+                    document.getElementById('p_categoria').value = '';
+                    cargarPlatos();
+                } else {
+                    const err = await res.json();
+                    mostrarResultado(err.error || 'Error al crear plato', 'error');
+                }
+            } catch {
+                mostrarResultado('Error de conexión', 'error');
+            }
+        });
+
+        cargarDashboard();
+        cargarPlatos();
+    });
 </script>
 
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin - Menú AR</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <main class="admin-main">
-        <h2>Panel Admin</h2>
-        <div id="adminInfo"></div>
-
-        <section>
-            <h3>Crear nuevo plato</h3>
-            <form id="createPlatoForm">
-                <input id="p_nombre" placeholder="Nombre" required>
-                <input id="p_precio" placeholder="Precio" required type="number" step="0.01">
-                <input id="p_categoria" placeholder="Categoría">
-                <button type="submit">Crear</button>
-            </form>
-            <div id="createResult"></div>
-        </section>
-
-        <section>
-            <h3>Platos</h3>
-            <div id="adminPlatosList">Cargando...</div>
-        </section>
-    </main>
-
-    <script src="admin.js"></script>
 </body>
 </html>
