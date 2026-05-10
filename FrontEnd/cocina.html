@@ -247,6 +247,10 @@
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+            // Filtrar: cocina solo ve pendientes y en preparacion
+            const activos = pedidos.filter(p =>
+                p.estado === 'pendiente' || p.estado === 'en_preparacion'
+            );
             const pedidos = await res.json();
 
             document.getElementById('ultimaActualizacion').textContent =
@@ -262,7 +266,7 @@
             }
 
             // MRA-122: Renderizar tarjeta con items detallados de cada pedido
-            grid.innerHTML = pedidos.map(p => {
+            grid.innerHTML = activos.map(p => {
                 const estadoClase = p.estado === 'en_preparacion' ? 'en-proceso' : p.estado;
                 const badgeClase  = p.estado === 'en_preparacion' ? 'en-proceso' : p.estado;
                 const estadoLabel = p.estado === 'en_preparacion' ? 'En preparación' : 

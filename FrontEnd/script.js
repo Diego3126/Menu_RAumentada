@@ -1,5 +1,7 @@
 // Configuración de la API
-const API_URL = 'http://localhost:3000/api';
+const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000/api'
+    : '/api';
 
 // Variables globales
 let allPlatos = [];           // Todos los platos desde la API
@@ -239,34 +241,57 @@ function renderDishes() {
 function openAR3DViewer(plato) {
     arModal.style.display = 'flex';
 
-    // Determinar ruta del modelo 3D
-    const modelPath = `/models/${sanitizeName(plato.nombre)}.glb` || '/models/default.glb';
+    // Ruta del modelo — desde BD o fallback por nombre
+    const modelPath = plato.model_path
+        ? `/models/${plato.model_path}`
+        : `/models/${sanitizeName(plato.nombre)}.glb`;
 
-    // Cargar modelo en el visor (si ra-service no está disponible muestra placeholder)
-    if (viewer3D) {
-        viewer3D.loadModel(modelPath, {
-            dishId: plato.id,
-            nombre: plato.nombre,
-            descripcion: plato.descripcion,
-            precio: plato.precio,
-            categoria: plato.categoria,
-            ingredientes_base: plato.ingredientes_base
-        });
-    } else {
-        console.warn('Visor 3D no inicializado aún');
+    // Nombre del plato en el header del modal
+    const dishNameEl = document.getElementById('dishNameAR');
+    if (dishNameEl) dishNameEl.textContent = plato.nombre;
+
+    // Asignar el modelo a model-viewer
+    const mv = document.getElementById('modelViewerAR');
+    const loading = document.getElementById('mvLoading');
+
+    if (mv) {
+        // Mostrar loading mientras carga
+        if (loading) loading.style.display = 'flex';
+
+        mv.src = modelPath;
+
+        // Ocultar loading cuando el modelo esté listo
+        mv.addEventListener('load', () => {
+            if (loading) loading.style.display = 'none';
+        }, { once: true });
+
+        // Si el modelo falla (no existe el .glb), ocultar loading igual
+        mv.addEventListener('error', () => {
+            if (loading) loading.style.display = 'none';
+            console.warn('Modelo no encontrado:', modelPath);
+        }, { once: true });
+
+        // Mostrar badge "RA disponible" en móviles que lo soporten
+        mv.addEventListener('ar-status', (e) => {
+            const badge = document.getElementById('arBadgeMobile');
+            if (badge && e.detail.status !== 'not-presenting') {
+                badge.style.display = 'inline-flex';
+            }
+        }, { once: true });
     }
 
-    // Conectar el botón "Personalizar y agregar al carrito" con el plato actual
-    // Esto restaura el flujo original: visor AR → personalización → carrito
+    // Conectar botón "Personalizar y agregar al carrito"
     const btnPersonalizar = document.getElementById('btnPersonalizarDesdeAR');
     if (btnPersonalizar) {
-        // Reemplazar el listener anterior para evitar duplicados
         const btnNuevo = btnPersonalizar.cloneNode(true);
         btnPersonalizar.parentNode.replaceChild(btnNuevo, btnPersonalizar);
         btnNuevo.addEventListener('click', () => {
             arModal.style.display = 'none';
             window.location.href = `pedido.html?id=${plato.id}`;
         });
+        // Restaurar hover handlers
+        btnNuevo.onmouseover = () => { btnNuevo.style.transform='translateY(-2px)'; btnNuevo.style.boxShadow='0 6px 22px rgba(255,140,66,0.55)'; };
+        btnNuevo.onmouseout  = () => { btnNuevo.style.transform='translateY(0)';    btnNuevo.style.boxShadow='0 4px 15px rgba(255,140,66,0.4)'; };
     }
 }
 
@@ -276,9 +301,19 @@ function openAR3DViewer(plato) {
 function sanitizeName(name) {
     return name
         .toLowerCase()
+        // Reemplazar tildes y caracteres especiales del español ANTES de eliminar símbolos
+        .replace(/[áàäâ]/g, 'a')
+        .replace(/[éèëê]/g, 'e')
+        .replace(/[íìïî]/g, 'i')
+        .replace(/[óòöô]/g, 'o')
+        .replace(/[úùüû]/g, 'u')
+        .replace(/ñ/g, 'n')
+        .replace(/ç/g, 'c')
+        // Eliminar el resto de caracteres especiales
         .replace(/[^\w\s-]/g, '')
         .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
+        .replace(/-+/g, '-')
+        .trim();
 }
 
 // ==================== FUNCIONES DE REALIDAD AUMENTADA ====================
