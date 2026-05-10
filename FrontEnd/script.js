@@ -224,13 +224,9 @@ function renderDishes() {
             actionsEl.appendChild(delBtn);
         }
 
-        // Agregar click al card para abrir modal de AR o ir a personalización
+        // Click en card: ir directo a personalizar el plato
         card.addEventListener('click', () => {
-            // Opción 1: Ir a personalizar (comentado)
-            // window.location.href = `pedido.html?id=${plato.id}`;
-            
-            // Opción 2: Abrir visor 3D en modal (usando GLB temporal)
-            openAR3DViewer(plato);
+            window.location.href = `pedido.html?id=${plato.id}`;
         });
 
         dishesGrid.appendChild(card);
@@ -242,13 +238,11 @@ function renderDishes() {
  */
 function openAR3DViewer(plato) {
     arModal.style.display = 'flex';
-    
-    // Determinar ruta del modelo
-    // Por defecto, busca en carpeta /models con el nombre del plato
-    // Si no existe, usa un placeholder
+
+    // Determinar ruta del modelo 3D
     const modelPath = `/models/${sanitizeName(plato.nombre)}.glb` || '/models/default.glb';
-    
-    // Cargar modelo en el visor
+
+    // Cargar modelo en el visor (si ra-service no está disponible muestra placeholder)
     if (viewer3D) {
         viewer3D.loadModel(modelPath, {
             dishId: plato.id,
@@ -260,6 +254,19 @@ function openAR3DViewer(plato) {
         });
     } else {
         console.warn('Visor 3D no inicializado aún');
+    }
+
+    // Conectar el botón "Personalizar y agregar al carrito" con el plato actual
+    // Esto restaura el flujo original: visor AR → personalización → carrito
+    const btnPersonalizar = document.getElementById('btnPersonalizarDesdeAR');
+    if (btnPersonalizar) {
+        // Reemplazar el listener anterior para evitar duplicados
+        const btnNuevo = btnPersonalizar.cloneNode(true);
+        btnPersonalizar.parentNode.replaceChild(btnNuevo, btnPersonalizar);
+        btnNuevo.addEventListener('click', () => {
+            arModal.style.display = 'none';
+            window.location.href = `pedido.html?id=${plato.id}`;
+        });
     }
 }
 
