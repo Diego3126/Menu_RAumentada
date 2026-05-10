@@ -47,8 +47,10 @@ app.use('/api/platos', platosRoutes);          // el menú es público
 app.use('/api/carrito', carritoRoutes);        // carrito es público (por session)
 
 // ==================== RUTAS PROTEGIDAS ====================
-// MRA-66: Solo usuarios autenticados pueden hacer pedidos
-app.use('/api/pedidos', requireAuth, pedidosRoutes);
+// Pedidos: público para POST (clientes sin login), protegido internamente por ruta
+// El POST no requiere auth — los clientes llenan el formulario con sus datos
+// El GET y PATCH sí requieren auth — están protegidos dentro de pedidos.js
+app.use('/api/pedidos', pedidosRoutes);
 
 // MRA-66: Solo admins pueden ver/editar personalización y usuarios
 app.use('/api/personalizacion', requireAdmin, personalizacionRoutes);

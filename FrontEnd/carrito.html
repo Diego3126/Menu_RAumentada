@@ -237,6 +237,61 @@
             gap: 0.5rem; color: rgba(255,255,255,0.3); font-size: 0.76rem;
         }
         .nota-envio i { color: #6bcb77; }
+
+        /* ===== FORMULARIO DATOS CLIENTE ===== */
+        .form-cliente {
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 1.25rem;
+        }
+        .form-cliente-titulo {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255,255,255,0.35);
+            margin-bottom: 0.85rem;
+        }
+        .form-grupo {
+            margin-bottom: 0.75rem;
+        }
+        .form-grupo label {
+            display: block;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.45);
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+        .form-grupo input, .form-grupo textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 0.65rem 0.9rem;
+            color: white;
+            font-size: 0.88rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+            box-sizing: border-box;
+        }
+        .form-grupo input::placeholder, .form-grupo textarea::placeholder {
+            color: rgba(255,255,255,0.2);
+        }
+        .form-grupo input:focus, .form-grupo textarea:focus {
+            border-color: rgba(255,140,66,0.5);
+            background: rgba(255,140,66,0.06);
+        }
+        .form-grupo input.error-campo {
+            border-color: rgba(255,107,107,0.6);
+            background: rgba(255,107,107,0.06);
+        }
+        .form-grupo textarea {
+            resize: none;
+            height: 60px;
+            line-height: 1.4;
+        }
+        .campo-requerido { color: #ff8c42; margin-left: 2px; }
         .loading-spinner { text-align: center; padding: 3rem; color: rgba(255,255,255,0.4); }
         .error-message { text-align: center; padding: 2.5rem; color: rgba(255,255,255,0.5); }
         .btn-retry {
@@ -315,6 +370,31 @@
         </div>
         <div class="resumen-body">
             <div class="resumen-pedido">
+
+                <!-- Formulario datos del cliente -->
+                <div class="form-cliente">
+                    <p class="form-cliente-titulo">
+                        <i class="fas fa-user" style="color:#ff8c42;margin-right:0.4rem;"></i>
+                        Datos para el pedido
+                    </p>
+                    <div class="form-grupo">
+                        <label>Nombre <span class="campo-requerido">*</span></label>
+                        <input type="text" id="clienteNombre" placeholder="¿Cómo te llamas?" maxlength="100" autocomplete="name">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Teléfono</label>
+                        <input type="tel" id="clienteTelefono" placeholder="Opcional" maxlength="20" autocomplete="tel">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Email</label>
+                        <input type="email" id="clienteEmail" placeholder="Opcional" maxlength="150" autocomplete="email">
+                    </div>
+                    <div class="form-grupo">
+                        <label>Notas para cocina</label>
+                        <textarea id="clienteNotas" placeholder="Ej: sin gluten, alergia a nueces..."></textarea>
+                    </div>
+                </div>
+
                 <div class="resumen-lista">
                     <div class="resumen-item">
                         <span>Subtotal:</span>
