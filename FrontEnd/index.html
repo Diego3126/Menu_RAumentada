@@ -12,7 +12,7 @@
     <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- GLTFLoader para cargar modelos GLB/GLTF -->
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 
@@ -22,6 +22,11 @@
             <i class="fas fa-shopping-cart"></i>
             <span class="cart-count" id="cartCount">0</span>
         </a>
+        <div id="authControls" class="auth-controls">
+            <a id="loginLink" href="login.html">Iniciar sesión</a>
+            <a id="logoutLink" href="#" style="display:none; margin-left:10px;">Cerrar sesión</a>
+            <a id="adminLink" href="http://localhost:8080" target="_blank" style="display:none; margin-left:10px;">Admin</a>
+        </div>
     </div>
     <h1>🍽️ Restaurante Delicias</h1>
     <p>Explora nuestro menú con Realidad Aumentada</p>
@@ -90,6 +95,7 @@
 </div>
 
 <script src="3d-viewer.js"></script>
+<script src="login.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
