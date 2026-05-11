@@ -164,6 +164,7 @@
             padding: 0.9rem 1.2rem;
             font-size: 0.88rem;
             border-bottom: 1px solid rgba(255,255,255,0.04);
+            vertical-align: middle;
         }
 
         tbody tr:last-child td { border-bottom: none; }
@@ -188,7 +189,7 @@
             color: rgba(240,235,227,0.3);
         }
 
-        /* Gestión de platos */
+        /* ======================== GESTIÓN DE PLATOS ======================== */
         .card-section {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.08);
@@ -209,9 +210,16 @@
 
         .form-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 0.8rem;
-            align-items: end;
+            margin-bottom: 0.8rem;
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
         }
 
         .form-field label {
@@ -223,7 +231,8 @@
             margin-bottom: 0.4rem;
         }
 
-        .form-field input {
+        .form-field input,
+        .form-field textarea {
             width: 100%;
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.1);
@@ -234,31 +243,115 @@
             color: #f0ebe3;
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
+            resize: none;
         }
 
-        .form-field input:focus {
+        .form-field input:focus,
+        .form-field textarea:focus {
             border-color: #ff8c42;
             box-shadow: 0 0 0 3px rgba(255,140,66,0.15);
         }
 
-        .form-field input::placeholder { color: rgba(240,235,227,0.25); }
+        .form-field input::placeholder,
+        .form-field textarea::placeholder { color: rgba(240,235,227,0.25); }
+
+        /* Preview de imagen */
+        .img-preview-wrap {
+            margin-top: 0.5rem;
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .img-preview-wrap img {
+            height: 60px;
+            width: 80px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            object-fit: cover;
+            background: rgba(255,255,255,0.04);
+        }
+        .img-preview-wrap span {
+            font-size: 0.75rem;
+            color: rgba(240,235,227,0.4);
+        }
+
+        /* Tags de ingredientes */
+        .tags-input-box {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 0.45rem 0.7rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            cursor: text;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            min-height: 44px;
+            align-items: center;
+        }
+        .tags-input-box:focus-within {
+            border-color: #ff8c42;
+            box-shadow: 0 0 0 3px rgba(255,140,66,0.15);
+        }
+        .tag {
+            background: rgba(255,140,66,0.18);
+            border: 1px solid rgba(255,140,66,0.3);
+            color: #ffa96a;
+            border-radius: 20px;
+            padding: 0.18rem 0.6rem;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+            animation: tagIn 0.15s ease;
+        }
+        @keyframes tagIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .tag-x {
+            cursor: pointer;
+            color: rgba(255,140,66,0.5);
+            font-size: 0.85rem;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+        .tag-x:hover { color: #ff8c42; }
+        .tags-input-box input {
+            background: none;
+            border: none;
+            outline: none;
+            color: #f0ebe3;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.88rem;
+            min-width: 140px;
+            flex: 1;
+            padding: 0.15rem 0.1rem;
+        }
+        .tag-hint {
+            font-size: 0.72rem;
+            color: rgba(240,235,227,0.28);
+            margin-top: 0.35rem;
+        }
 
         .btn-crear {
             background: linear-gradient(135deg, #ff8c42, #e67e22);
             border: none;
             border-radius: 10px;
-            padding: 0.7rem 1.4rem;
+            padding: 0.75rem 1.8rem;
             color: white;
             font-family: 'DM Sans', sans-serif;
             font-size: 0.9rem;
             font-weight: 500;
             cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
+            transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
             white-space: nowrap;
             box-shadow: 0 4px 12px rgba(255,140,66,0.25);
+            margin-top: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-
         .btn-crear:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,140,66,0.35); }
+        .btn-crear:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
         .resultado-msg {
             margin-top: 0.8rem;
@@ -267,22 +360,21 @@
             border-radius: 8px;
             display: none;
         }
-
         .resultado-msg.exito { background: rgba(76,175,80,0.12); color: #81c784; border: 1px solid rgba(76,175,80,0.2); display: block; }
         .resultado-msg.error { background: rgba(255,92,92,0.12); color: #ff8f8f; border: 1px solid rgba(255,92,92,0.2); display: block; }
 
+        /* Botones tabla */
         .btn-eliminar {
             background: rgba(255,92,92,0.12);
             border: 1px solid rgba(255,92,92,0.2);
             border-radius: 6px;
-            padding: 0.3rem 0.7rem;
+            padding: 0.28rem 0.65rem;
             color: #ff8f8f;
             font-size: 0.78rem;
             cursor: pointer;
             font-family: 'DM Sans', sans-serif;
             transition: background 0.2s;
         }
-
         .btn-eliminar:hover { background: rgba(255,92,92,0.22); }
 
         .btn-editar-precio {
@@ -466,12 +558,11 @@
             .stats-grid { grid-template-columns: 1fr 1fr; }
             .tabla-wrap { overflow-x: auto; }
             table { min-width: 500px; }
-            .form-row { grid-template-columns: 1fr 1fr; }
+            .form-row, .form-row-2 { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 480px) {
             .stats-grid { grid-template-columns: 1fr; }
-            .form-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -554,27 +645,27 @@
     <div class="tab-panel" id="tab-platos">
         <div class="page-header">
             <h1>Gestión de platos</h1>
-            <p>Agrega o elimina platos del menú</p>
+            <p>Agrega, edita o elimina platos del menú</p>
         </div>
 
+        <!-- FORMULARIO CREAR PLATO -->
         <div class="card-section">
             <h3><i class="fas fa-plus-circle" style="color:#ff8c42"></i> Crear nuevo plato</h3>
+
+            <!-- Fila 1: nombre, precio, categoría -->
             <div class="form-row">
                 <div class="form-field">
-                    <label>Nombre</label>
+                    <label>Nombre *</label>
                     <input type="text" id="p_nombre" placeholder="Ej: Hamburguesa clásica">
                 </div>
                 <div class="form-field">
-                    <label>Precio</label>
+                    <label>Precio *</label>
                     <input type="number" id="p_precio" placeholder="18000" step="0.01" min="0">
                 </div>
                 <div class="form-field">
                     <label>Categoría</label>
                     <input type="text" id="p_categoria" placeholder="Ej: Hamburguesas">
                 </div>
-                <button class="btn-crear" id="btnCrearPlato">
-                    <i class="fas fa-plus"></i> Crear
-                </button>
             </div>
 
             <!-- Fila 2: descripción e imagen URL -->
@@ -643,12 +734,19 @@
             <div class="resultado-msg" id="resultadoCrear"></div>
         </div>
 
+        <!-- TABLA DE PLATOS -->
         <div class="card-section">
             <h3><i class="fas fa-list" style="color:#ff8c42"></i> Platos del menú</h3>
             <div class="tabla-wrap" style="margin-bottom:0">
                 <table>
                     <thead>
-                        <tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Acción</th></tr>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Modelo 3D</th>
+                            <th>Acciones</th>
+                        </tr>
                     </thead>
                     <tbody id="listaPlatos">
                         <tr><td colspan="4" class="empty-state">Cargando platos...</td></tr>
@@ -674,7 +772,7 @@
         const token = localStorage.getItem('token');
         const headers = { 'Authorization': `Bearer ${token}` };
 
-        // Tabs
+        // ── Tabs ──────────────────────────────────────────────
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -684,7 +782,7 @@
             });
         });
 
-        // Dashboard
+        // ── Dashboard ─────────────────────────────────────────
         async function cargarDashboard() {
             try {
                 const resPedidos = await fetch(`${API_URL}/pedidos`, { headers });
@@ -722,7 +820,7 @@
             }
         }
 
-        // Platos
+        // ── Platos ────────────────────────────────────────────
         async function cargarPlatos() {
             const tbody = document.getElementById('listaPlatos');
             try {
@@ -735,7 +833,7 @@
                 }
 
                 tbody.innerHTML = platos.map(p => `
-                    <tr>
+                    <tr id="fila-${p.id}">
                         <td><strong>${p.nombre}</strong></td>
                         <td>${p.categoria || '—'}</td>
                         <td class="precio-cell">
@@ -786,22 +884,78 @@
 
                 tbody.querySelectorAll('.btn-eliminar').forEach(btn => {
                     btn.addEventListener('click', async () => {
-                        if (!confirm('¿Eliminar este plato?')) return;
+                        if (!confirm('¿Eliminar este plato del menú?')) return;
                         const res = await fetch(`${API_URL}/platos/${btn.dataset.id}`, { method: 'DELETE', headers });
                         if (res.ok) cargarPlatos();
-                        else mostrarResultado('Error al eliminar', 'error');
+                        else mostrarResultado('Error al eliminar el plato', 'error');
                     });
                 });
+
             } catch {
                 tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Error al cargar platos</td></tr>`;
             }
         }
 
+        // ── Editar precio inline ───────────────────────────────
+        window.activarEditarPrecio = (id) => {
+            document.getElementById(`display-${id}`).style.display = 'none';
+            const editWrap = document.getElementById(`edit-${id}`);
+            editWrap.style.display = 'inline-flex';
+            document.getElementById(`input-precio-${id}`).focus();
+        };
+
+        window.cancelarEditarPrecio = (id) => {
+            document.getElementById(`display-${id}`).style.display = 'inline-flex';
+            document.getElementById(`edit-${id}`).style.display = 'none';
+        };
+
+        window.guardarPrecio = async (id) => {
+            const nuevoPrecio = parseFloat(document.getElementById(`input-precio-${id}`).value);
+            if (isNaN(nuevoPrecio) || nuevoPrecio <= 0) {
+                alert('Ingresa un precio válido mayor a 0.');
+                return;
+            }
+
+            const btn = document.querySelector(`#edit-${id} .btn-guardar-precio`);
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+
+            try {
+                const res = await fetch(`${API_URL}/platos/${id}/precio`, {
+                    method: 'PUT',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nuevoPrecio })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    // Actualizar el display sin recargar toda la tabla
+                    document.getElementById(`display-${id}`).textContent =
+                        `$${parseFloat(data.precio).toFixed(2)}`;
+                    cancelarEditarPrecio(id);
+                    // Feedback visual breve en la celda
+                    const cell = document.getElementById(`display-${id}`);
+                    cell.style.color = '#81c784';
+                    setTimeout(() => { cell.style.color = ''; }, 1500);
+                } else {
+                    const err = await res.json();
+                    alert(err.error || 'No se pudo actualizar el precio.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Guardar';
+                }
+            } catch {
+                alert('Error de conexión al actualizar el precio.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Guardar';
+            }
+        };
+
+        // ── Feedback formulario ────────────────────────────────
         function mostrarResultado(msg, tipo) {
             const el = document.getElementById('resultadoCrear');
             el.textContent = msg;
             el.className = `resultado-msg ${tipo}`;
-            setTimeout(() => { el.className = 'resultado-msg'; }, 3000);
+            setTimeout(() => { el.className = 'resultado-msg'; }, 4000);
         }
 
         // ── Upload y preview de imagen ─────────────────────────
@@ -1006,11 +1160,20 @@
 
         // ── Crear plato (con modelo 3D opcional) ──────────────
         document.getElementById('btnCrearPlato').addEventListener('click', async () => {
-            const nombre    = document.getElementById('p_nombre').value.trim();
-            const precio    = parseFloat(document.getElementById('p_precio').value);
-            const categoria = document.getElementById('p_categoria').value.trim();
+            const nombre      = document.getElementById('p_nombre').value.trim();
+            const precio      = parseFloat(document.getElementById('p_precio').value);
+            const categoria   = document.getElementById('p_categoria').value.trim();
+            const descripcion = document.getElementById('p_descripcion').value.trim();
+            const imagen_url  = document.getElementById('p_imagen').value.trim();
 
-            if (!nombre || !precio) { mostrarResultado('Nombre y precio son obligatorios', 'error'); return; }
+            if (tagInput.value.trim()) agregarTag(tagInput.value);
+
+            if (!nombre)               { mostrarResultado('El nombre es obligatorio.', 'error'); return; }
+            if (!precio || precio <= 0){ mostrarResultado('Ingresa un precio válido.', 'error'); return; }
+
+            const btn = document.getElementById('btnCrearPlato');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Creando...';
 
             try {
                 // Paso 1: si hay imagen, subirla primero para obtener la URL
@@ -1040,19 +1203,13 @@
                 const res = await fetch(`${API_URL}/platos`, {
                     method: 'POST',
                     headers: { ...headers, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre, precio, categoria })
+                    body: JSON.stringify({ nombre, precio, categoria, descripcion, imagen_url, ingredientes: [...tags] })
                 });
 
-                if (res.ok) {
-                    const data = await res.json();
-                    mostrarResultado(`✅ Plato "${data.nombre}" creado`, 'exito');
-                    document.getElementById('p_nombre').value = '';
-                    document.getElementById('p_precio').value = '';
-                    document.getElementById('p_categoria').value = '';
-                    cargarPlatos();
-                } else {
+                if (!res.ok) {
                     const err = await res.json();
-                    mostrarResultado(err.error || 'Error al crear plato', 'error');
+                    mostrarResultado(err.error || 'Error al crear el plato.', 'error');
+                    return;
                 }
 
                 const data = await res.json();
@@ -1087,17 +1244,20 @@
                 mostrarResultado(`✅ Plato "${data.nombre}" creado${ingMsg}${modeloMsg}.`, 'exito');
 
                 // Limpiar formulario completo
-                ['p_nombre','p_precio','p_categoria','p_descripcion'].forEach(id => {
+                ['p_nombre','p_precio','p_categoria','p_descripcion','p_imagen'].forEach(id => {
                     document.getElementById(id).value = '';
                 });
+                document.getElementById('imgPreviewWrap').style.display = 'none';
                 tags.length = 0;
                 renderTags();
-                limpiarImagen();
                 limpiarModelo();
                 cargarPlatos();
 
             } catch {
-                mostrarResultado('Error de conexión', 'error');
+                mostrarResultado('Error de conexión.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus"></i> Crear plato';
             }
         });
 

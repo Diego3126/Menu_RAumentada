@@ -122,7 +122,7 @@ function validarPedido({ items, nombre_cliente, email_cliente, subtotal, total }
 // POST /api/pedidos — Registrar nuevo pedido
 // MRA-111: Protegido con requireAuth — extrae usuario del token
 // ============================================================
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', async (req, res) => {  // Público: clientes no necesitan login
     const {
         items,
         nombre_cliente,
@@ -133,8 +133,8 @@ router.post('/', requireAuth, async (req, res) => {
         total
     } = req.body;
 
-    // MRA-111: El usuario viene del token (req.usuario lo pone requireAuth)
-    const usuario_id = req.usuario?.userId || null;
+    // Pedidos de clientes no requieren login — usuario_id siempre null
+    const usuario_id = null;
 
     // MRA-113: Validar estructura y formato de los datos
     const errores = validarPedido({ items, nombre_cliente, email_cliente, subtotal, total });

@@ -72,6 +72,30 @@
                 <span id="precioTotal">$0.00</span>
             </div>
         </div>
+        <!-- Botón Ver en Realidad Aumentada -->
+        <button id="verEnARBtn" style="
+            width: 100%;
+            background: transparent;
+            border: 2px solid #ff8c42;
+            color: #ff8c42;
+            padding: 0.85rem 2rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            margin-bottom: 0.75rem;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        "
+        onmouseover="this.style.background='rgba(255,140,66,0.1)'"
+        onmouseout="this.style.background='transparent'">
+            <i class="fas fa-cube"></i> Ver en Realidad Aumentada
+        </button>
+
         <button id="confirmarPedidoBtn" class="confirmar-btn">
             <i class="fas fa-check-circle"></i> Confirmar Pedido
         </button>
@@ -91,6 +115,136 @@
     </div>
 </div>
 
+<!-- Modal de Realidad Aumentada -->
+<div id="arModalPedido" style="
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+">
+    <div style="
+        background: #1a1208;
+        border: 1px solid rgba(255,140,66,0.25);
+        border-radius: 20px;
+        width: 100%;
+        max-width: 560px;
+        overflow: hidden;
+        animation: modalIn 0.2s ease;
+    ">
+        <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        ">
+            <h3 id="arModalTitulo" style="color:white; font-size:1.1rem; margin:0;"></h3>
+            <span id="cerrarArModalPedido" style="
+                font-size: 1.5rem;
+                color: rgba(255,255,255,0.4);
+                cursor: pointer;
+                line-height: 1;
+            ">&times;</span>
+        </div>
+
+        <!-- model-viewer: 3D en PC, RA real con cámara en móvil -->
+        <div style="position:relative; background:#1a1a1a; height: 340px;">
+            <model-viewer
+                id="mvPedido"
+                src=""
+                alt="Modelo 3D del plato"
+                ar
+                ar-modes="webxr scene-viewer quick-look"
+                camera-controls
+                auto-rotate
+                auto-rotate-delay="800"
+                rotation-per-second="20deg"
+                shadow-intensity="1"
+                style="width:100%; height:100%; background:#1a1a1a;">
+
+                <!-- Botón AR — solo aparece en móviles compatibles -->
+                <button slot="ar-button" style="
+                    position:absolute; bottom:1rem; right:1rem;
+                    background:linear-gradient(135deg,#ff8c42,#e5631a);
+                    color:white; border:none; border-radius:50px;
+                    padding:0.65rem 1.1rem; font-size:0.88rem; font-weight:700;
+                    cursor:pointer; display:flex; align-items:center; gap:0.4rem;
+                    box-shadow:0 4px 15px rgba(255,140,66,0.5); font-family:inherit;
+                ">
+                    <i class="fas fa-camera"></i> Ver con cámara
+                </button>
+            </model-viewer>
+        </div>
+
+        <div style="padding: 0.8rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.06);">
+            <p style="color:rgba(255,255,255,0.3); font-size:0.78rem; text-align:center; margin:0;">
+                <i class="fas fa-hand-pointer"></i> Arrastra para rotar &nbsp;·&nbsp;
+                <i class="fas fa-search-plus"></i> Pellizca para zoom
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes modalIn { from { opacity:0; transform:scale(0.95) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+</style>
+
+<!-- model-viewer para AR real en móvil -->
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 <script src="pedido.js"></script>
+<script>
+(function() {
+    const modal     = document.getElementById('arModalPedido');
+    const cerrarBtn = document.getElementById('cerrarArModalPedido');
+    const verBtn    = document.getElementById('verEnARBtn');
+
+    verBtn?.addEventListener('click', () => {
+        const nombre = document.getElementById('platoNombre')?.textContent || '';
+        const params = new URLSearchParams(window.location.search);
+        const platoId = params.get('id');
+
+        document.getElementById('arModalTitulo').textContent = nombre;
+        modal.style.display = 'flex';
+
+        // Obtener model_path del plato desde la API
+        fetch(`/api/platos/${platoId}`)
+            .then(r => r.json())
+            .then(data => {
+                const plato = data.plato || {};
+                const sanitizar = n => n.toLowerCase()
+                    .replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e')
+                    .replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o')
+                    .replace(/[úùüû]/g,'u').replace(/ñ/g,'n')
+                    .replace(/[^\w\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-');
+
+                const src = plato.model_path
+                    ? `/models/${plato.model_path}`
+                    : `/models/${sanitizar(nombre)}.glb`;
+
+                const mv = document.getElementById('mvPedido');
+                if (mv) mv.src = src;
+            })
+            .catch(() => {
+                // fallback por nombre
+                const sanitizar = n => n.toLowerCase()
+                    .replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e')
+                    .replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o')
+                    .replace(/[úùüû]/g,'u').replace(/ñ/g,'n')
+                    .replace(/[^\w\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-');
+                const mv = document.getElementById('mvPedido');
+                if (mv) mv.src = `/models/${sanitizar(nombre)}.glb`;
+            });
+    });
+
+    cerrarBtn?.addEventListener('click', () => { modal.style.display = 'none'; });
+    modal?.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+})();
+</script>
 </body>
 </html>
