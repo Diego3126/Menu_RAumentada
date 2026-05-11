@@ -285,6 +285,182 @@
 
         .btn-eliminar:hover { background: rgba(255,92,92,0.22); }
 
+<<<<<<< Updated upstream
+=======
+        .btn-editar-precio {
+            background: rgba(100,160,255,0.12);
+            border: 1px solid rgba(100,160,255,0.2);
+            border-radius: 6px;
+            padding: 0.28rem 0.65rem;
+            color: #64a0ff;
+            font-size: 0.78rem;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s;
+            margin-right: 0.35rem;
+        }
+        .btn-editar-precio:hover { background: rgba(100,160,255,0.22); }
+
+        /* Edición de precio inline */
+        .precio-cell { white-space: nowrap; }
+        .precio-display { display: inline-flex; align-items: center; gap: 0.4rem; }
+        .precio-edit-wrap {
+            display: none;
+            align-items: center;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+        .precio-edit-wrap input {
+            width: 95px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,140,66,0.4);
+            border-radius: 6px;
+            padding: 0.25rem 0.5rem;
+            color: #f0ebe3;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .precio-edit-wrap input:focus { border-color: #ff8c42; box-shadow: 0 0 0 2px rgba(255,140,66,0.15); }
+        .btn-guardar-precio, .btn-cancelar-precio {
+            padding: 0.25rem 0.55rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.15s;
+        }
+        .btn-guardar-precio  { background: rgba(76,175,80,0.2);    color: #81c784; border: 1px solid rgba(76,175,80,0.3) !important; }
+        .btn-guardar-precio:hover { background: rgba(76,175,80,0.32); }
+        .btn-cancelar-precio { background: rgba(255,255,255,0.06); color: rgba(240,235,227,0.5); border: 1px solid rgba(255,255,255,0.1) !important; }
+        .btn-cancelar-precio:hover { background: rgba(255,255,255,0.1); }
+
+        /* ── Upload imagen y modelo (compartido) ── */
+        .imagen-upload-area {
+            border: 2px dashed rgba(255,140,66,0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255,140,66,0.03);
+            position: relative;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+        .imagen-upload-area:hover,
+        .imagen-upload-area.drag-over {
+            border-color: rgba(255,140,66,0.7);
+            background: rgba(255,140,66,0.07);
+        }
+        .imagen-upload-area input[type="file"] {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .imagen-upload-area .upload-icon {
+            font-size: 1.5rem; color: rgba(255,140,66,0.5);
+        }
+        .imagen-upload-area .upload-text {
+            font-size: 0.82rem; color: rgba(240,235,227,0.4); line-height: 1.4;
+        }
+        /* Preview de imagen subida */
+        .img-preview-upload {
+            display: none;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.6rem;
+            border: 1px solid rgba(255,140,66,0.2);
+        }
+        .img-preview-upload img {
+            width: 100%;
+            max-height: 140px;
+            object-fit: cover;
+            display: block;
+        }
+        .img-preview-upload .quitar-imagen {
+            position: absolute;
+            top: 0.4rem; right: 0.4rem;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px; height: 24px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .img-preview-upload .quitar-imagen:hover { background: rgba(255,80,80,0.8); }
+
+        /* ── Upload modelo 3D ── */
+        .modelo-upload-area {
+            border: 2px dashed rgba(255,140,66,0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255,140,66,0.03);
+            position: relative;
+        }
+        .modelo-upload-area:hover,
+        .modelo-upload-area.drag-over {
+            border-color: rgba(255,140,66,0.7);
+            background: rgba(255,140,66,0.07);
+        }
+        .modelo-upload-area input[type="file"] {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .modelo-upload-area .upload-icon {
+            font-size: 1.5rem; color: rgba(255,140,66,0.5); margin-bottom: 0.4rem;
+        }
+        .modelo-upload-area .upload-text {
+            font-size: 0.82rem; color: rgba(240,235,227,0.4); line-height: 1.4;
+        }
+        .modelo-preview {
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            margin-top: 0.6rem;
+            background: rgba(255,140,66,0.08);
+            border: 1px solid rgba(255,140,66,0.2);
+            border-radius: 8px;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.82rem;
+        }
+        .modelo-preview i { color: #ff8c42; }
+        .modelo-preview span { flex: 1; color: rgba(240,235,227,0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .modelo-preview .quitar-modelo {
+            cursor: pointer; color: rgba(240,235,227,0.3);
+            font-size: 1rem; transition: color 0.15s; flex-shrink: 0;
+        }
+        .modelo-preview .quitar-modelo:hover { color: #ff8f8f; }
+
+        /* Columna modelo en tabla de platos */
+        .modelo-badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            font-size: 0.75rem; padding: 0.2rem 0.55rem;
+            border-radius: 20px;
+        }
+        .modelo-badge.con-modelo {
+            background: rgba(255,140,66,0.12);
+            color: #ffa96a;
+            border: 1px solid rgba(255,140,66,0.2);
+        }
+        .modelo-badge.sin-modelo {
+            background: rgba(255,255,255,0.05);
+            color: rgba(240,235,227,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+>>>>>>> Stashed changes
         @media (max-width: 768px) {
             nav { padding: 0 1rem; }
             .nav-links { display: none; }
@@ -403,6 +579,73 @@
                     <i class="fas fa-plus"></i> Crear
                 </button>
             </div>
+<<<<<<< Updated upstream
+=======
+
+            <!-- Fila 2: descripción e imagen URL -->
+            <div class="form-row-2">
+                <div class="form-field">
+                    <label>Descripción</label>
+                    <textarea id="p_descripcion" rows="2" placeholder="Describe brevemente el plato..."></textarea>
+                </div>
+                <div class="form-field">
+                    <label>Imagen del plato <span style="color:rgba(240,235,227,0.3);font-size:0.7rem;">(JPG, PNG, WEBP)</span></label>
+                    <div class="imagen-upload-area" id="imagenUploadArea">
+                        <input type="file" id="p_imagen_file" accept=".jpg,.jpeg,.png,.webp,.avif">
+                        <div class="upload-icon"><i class="fas fa-image"></i></div>
+                        <div class="upload-text">
+                            Arrastra la imagen aquí<br>
+                            <span style="color:rgba(255,140,66,0.6);">o haz clic para seleccionar</span>
+                        </div>
+                    </div>
+                    <div class="img-preview-upload" id="imgPreviewUpload">
+                        <img id="imgPreviewFile" src="" alt="Vista previa">
+                        <button class="quitar-imagen" id="quitarImagen" type="button">×</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila 3: modelo 3D -->
+            <div class="form-row-2">
+                <div class="form-field">
+                    <label>Modelo 3D <span style="color:rgba(240,235,227,0.3);font-size:0.7rem;">(opcional · .glb)</span></label>
+                    <div class="modelo-upload-area" id="modeloUploadArea">
+                        <input type="file" id="p_modelo" accept=".glb,.gltf">
+                        <div class="upload-icon"><i class="fas fa-cube"></i></div>
+                        <div class="upload-text">
+                            Arrastra el archivo .glb aquí<br>
+                            <span style="color:rgba(255,140,66,0.6);">o haz clic para seleccionar</span>
+                        </div>
+                    </div>
+                    <div class="modelo-preview" id="modeloPreview">
+                        <i class="fas fa-cube"></i>
+                        <span id="modeloNombre">archivo.glb</span>
+                        <span class="quitar-modelo" id="quitarModelo">×</span>
+                    </div>
+                </div>
+                <div class="form-field" style="display:flex;align-items:center;padding-top:1.4rem;">
+                    <p style="font-size:0.78rem;color:rgba(240,235,227,0.3);line-height:1.6;">
+                        <i class="fas fa-circle-info" style="color:rgba(255,140,66,0.5);"></i>
+                        El modelo 3D se mostrará al cliente cuando use la función de
+                        <strong style="color:rgba(255,140,66,0.6);">Realidad Aumentada</strong>
+                        en el menú.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Fila 4: ingredientes base (tags) -->
+            <div class="form-field">
+                <label>Ingredientes base</label>
+                <div class="tags-input-box" id="tagsBox">
+                    <input type="text" id="tagInput" placeholder="Escribe un ingrediente y presiona Enter o coma...">
+                </div>
+                <p class="tag-hint"><i class="fas fa-circle-info" style="font-size:0.7rem"></i> Presiona Enter o , para agregar cada ingrediente</p>
+            </div>
+
+            <button class="btn-crear" id="btnCrearPlato">
+                <i class="fas fa-plus"></i> Crear plato
+            </button>
+>>>>>>> Stashed changes
             <div class="resultado-msg" id="resultadoCrear"></div>
         </div>
 
@@ -501,8 +744,55 @@
                     <tr>
                         <td><strong>${p.nombre}</strong></td>
                         <td>${p.categoria || '—'}</td>
+<<<<<<< Updated upstream
                         <td>$${parseFloat(p.precio).toFixed(2)}</td>
                         <td><button class="btn-eliminar" data-id="${p.id}"><i class="fas fa-trash"></i> Eliminar</button></td>
+=======
+                        <td class="precio-cell">
+                            <span class="precio-display" id="display-${p.id}">
+                                $${parseFloat(p.precio).toFixed(2)}
+                            </span>
+                            <span class="precio-edit-wrap" id="edit-${p.id}">
+                                <input type="number" step="0.01" min="0"
+                                    value="${parseFloat(p.precio).toFixed(2)}"
+                                    id="input-precio-${p.id}">
+                                <button class="btn-guardar-precio" onclick="guardarPrecio(${p.id})">
+                                    <i class="fas fa-check"></i> Guardar
+                                </button>
+                                <button class="btn-cancelar-precio" onclick="cancelarEditarPrecio(${p.id})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </span>
+                        </td>
+                        <td style="min-width:140px;vertical-align:top;padding-top:0.8rem;">
+                            ${p.imagen_url
+                                ? `<img src="${p.imagen_url}" style="width:52px;height:38px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.1);display:block;margin-bottom:0.25rem;" onerror="this.style.display='none'">`
+                                : `<span style="font-size:0.7rem;color:rgba(240,235,227,0.3);display:block;margin-bottom:0.25rem;">Sin imagen</span>`}
+                            <label style="cursor:pointer;display:inline-block;margin-bottom:0.5rem;">
+                                <input type="file" accept=".jpg,.jpeg,.png,.webp" style="display:none" onchange="subirImagenAPlato(${p.id}, this)">
+                                <span style="font-size:0.7rem;color:rgba(255,140,66,0.7);text-decoration:underline;text-underline-offset:2px;">
+                                    ${p.imagen_url ? 'Cambiar img' : 'Subir img'}
+                                </span>
+                            </label><br>
+                            ${p.model_path
+                                ? `<span class="modelo-badge con-modelo" style="font-size:0.68rem;"><i class="fas fa-cube"></i> 3D</span>`
+                                : `<span class="modelo-badge sin-modelo" style="font-size:0.68rem;"><i class="fas fa-cube"></i> Sin 3D</span>`}
+                            <label style="cursor:pointer;display:inline-block;margin-top:0.25rem;">
+                                <input type="file" accept=".glb,.gltf" style="display:none" onchange="subirModeloAPlato(${p.id}, this)">
+                                <span style="font-size:0.7rem;color:rgba(255,140,66,0.7);text-decoration:underline;text-underline-offset:2px;">
+                                    ${p.model_path ? 'Cambiar .glb' : 'Subir .glb'}
+                                </span>
+                            </label>
+                        </td>
+                        <td>
+                            <button class="btn-editar-precio" onclick="activarEditarPrecio(${p.id})">
+                                <i class="fas fa-pen"></i> Precio
+                            </button>
+                            <button class="btn-eliminar" data-id="${p.id}">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </td>
+>>>>>>> Stashed changes
                     </tr>`).join('');
 
                 tbody.querySelectorAll('.btn-eliminar').forEach(btn => {
@@ -525,6 +815,210 @@
             setTimeout(() => { el.className = 'resultado-msg'; }, 3000);
         }
 
+<<<<<<< Updated upstream
+=======
+        // ── Upload y preview de imagen ─────────────────────────
+        let imagenArchivo     = null;
+        let imagenUrlSubida   = '';   // URL que devuelve el backend tras subir
+
+        const imagenArea    = document.getElementById('imagenUploadArea');
+        const imagenInput   = document.getElementById('p_imagen_file');
+        const imgPrevUpload = document.getElementById('imgPreviewUpload');
+        const imgPrevFile   = document.getElementById('imgPreviewFile');
+        const quitarImagen  = document.getElementById('quitarImagen');
+
+        function mostrarImagenPreview(file) {
+            imagenArchivo   = file;
+            imagenUrlSubida = '';
+            const reader = new FileReader();
+            reader.onload = e => {
+                imgPrevFile.src          = e.target.result;
+                imgPrevUpload.style.display = 'block';
+                imagenArea.querySelector('.upload-icon').style.color = 'rgba(255,140,66,0.8)';
+                imagenArea.querySelector('.upload-text').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function limpiarImagen() {
+            imagenArchivo   = null;
+            imagenUrlSubida = '';
+            imagenInput.value = '';
+            imgPrevUpload.style.display = 'none';
+            imgPrevFile.src = '';
+            imagenArea.querySelector('.upload-icon').style.color = 'rgba(255,140,66,0.5)';
+            imagenArea.querySelector('.upload-text').style.display = '';
+        }
+
+        imagenInput.addEventListener('change', () => {
+            if (imagenInput.files[0]) mostrarImagenPreview(imagenInput.files[0]);
+        });
+
+        quitarImagen.addEventListener('click', limpiarImagen);
+
+        // Drag & drop para imagen
+        imagenArea.addEventListener('dragover', e => { e.preventDefault(); imagenArea.classList.add('drag-over'); });
+        imagenArea.addEventListener('dragleave', () => imagenArea.classList.remove('drag-over'));
+        imagenArea.addEventListener('drop', e => {
+            e.preventDefault();
+            imagenArea.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            const extsPermitidas = ['.jpg','.jpeg','.png','.webp','.avif'];
+            const ext = file ? '.' + file.name.split('.').pop().toLowerCase() : '';
+            if (file && extsPermitidas.includes(ext)) {
+                mostrarImagenPreview(file);
+            } else if (file) {
+                mostrarResultado('Solo se aceptan imágenes JPG, PNG, WEBP o AVIF', 'error');
+            }
+        });
+
+        // ── Sistema de tags (ingredientes) ────────────────────
+        const tags = [];
+        const tagsBox  = document.getElementById('tagsBox');
+        const tagInput = document.getElementById('tagInput');
+
+        function renderTags() {
+            // Remover tags existentes del DOM (no el input)
+            tagsBox.querySelectorAll('.tag').forEach(t => t.remove());
+            tags.forEach((nombre, i) => {
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.innerHTML = `${nombre}<span class="tag-x" data-i="${i}">×</span>`;
+                tagsBox.insertBefore(tag, tagInput);
+            });
+            tagsBox.querySelectorAll('.tag-x').forEach(x => {
+                x.addEventListener('click', () => {
+                    tags.splice(parseInt(x.dataset.i), 1);
+                    renderTags();
+                });
+            });
+        }
+
+        function agregarTag(valor) {
+            const limpio = valor.trim().replace(/,+$/, '').trim();
+            if (limpio && !tags.includes(limpio)) {
+                tags.push(limpio);
+                renderTags();
+            }
+            tagInput.value = '';
+        }
+
+        tagInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                agregarTag(tagInput.value);
+            } else if (e.key === 'Backspace' && tagInput.value === '' && tags.length > 0) {
+                tags.pop();
+                renderTags();
+            }
+        });
+
+        tagInput.addEventListener('blur', () => {
+            if (tagInput.value.trim()) agregarTag(tagInput.value);
+        });
+
+        // Clic en el box → enfocar input
+        tagsBox.addEventListener('click', () => tagInput.focus());
+
+        // ── Drag & drop / preview del modelo 3D ───────────────
+        let modeloArchivo = null;
+
+        const modeloArea    = document.getElementById('modeloUploadArea');
+        const modeloInput   = document.getElementById('p_modelo');
+        const modeloPrev    = document.getElementById('modeloPreview');
+        const modeloNombre  = document.getElementById('modeloNombre');
+        const quitarModelo  = document.getElementById('quitarModelo');
+
+        function mostrarModeloPreview(file) {
+            modeloArchivo = file;
+            modeloNombre.textContent = file.name;
+            modeloPrev.style.display = 'flex';
+            modeloArea.querySelector('.upload-icon').style.color = 'rgba(255,140,66,0.8)';
+        }
+
+        function limpiarModelo() {
+            modeloArchivo = null;
+            modeloInput.value = '';
+            modeloPrev.style.display = 'none';
+            modeloArea.querySelector('.upload-icon').style.color = 'rgba(255,140,66,0.5)';
+        }
+
+        modeloInput.addEventListener('change', () => {
+            if (modeloInput.files[0]) mostrarModeloPreview(modeloInput.files[0]);
+        });
+
+        quitarModelo.addEventListener('click', limpiarModelo);
+
+        // Drag & drop visual
+        modeloArea.addEventListener('dragover', e => { e.preventDefault(); modeloArea.classList.add('drag-over'); });
+        modeloArea.addEventListener('dragleave', () => modeloArea.classList.remove('drag-over'));
+        modeloArea.addEventListener('drop', e => {
+            e.preventDefault();
+            modeloArea.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && (file.name.endsWith('.glb') || file.name.endsWith('.gltf'))) {
+                mostrarModeloPreview(file);
+            } else if (file) {
+                mostrarResultado('Solo se aceptan archivos .glb o .gltf', 'error');
+            }
+        });
+
+        // ── Subir imagen a un plato existente desde la tabla ──
+        window.subirImagenAPlato = async (platoId, inputEl) => {
+            const file = inputEl.files[0];
+            if (!file) return;
+
+            const fd = new FormData();
+            fd.append('imagen', file);
+            fd.append('plato_id', platoId);
+
+            try {
+                const res = await fetch(`${API_URL}/platos/upload-image`, {
+                    method: 'POST',
+                    headers,
+                    body: fd
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    mostrarResultado(`✅ ${data.mensaje}`, 'exito');
+                    cargarPlatos();
+                } else {
+                    mostrarResultado(data.error || 'Error al subir la imagen.', 'error');
+                }
+            } catch {
+                mostrarResultado('Error de conexión al subir la imagen.', 'error');
+            }
+        };
+
+        // ── Subir modelo a un plato existente desde la tabla ──
+        window.subirModeloAPlato = async (platoId, inputEl) => {
+            const file = inputEl.files[0];
+            if (!file) return;
+
+            const fd = new FormData();
+            fd.append('modelo', file);
+            fd.append('plato_id', platoId);
+
+            try {
+                const res = await fetch(`${API_URL}/platos/upload-model`, {
+                    method: 'POST',
+                    headers,   // sin Content-Type: multer lo maneja
+                    body: fd
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    mostrarResultado(`✅ ${data.mensaje}`, 'exito');
+                    cargarPlatos();
+                } else {
+                    mostrarResultado(data.error || 'Error al subir el modelo.', 'error');
+                }
+            } catch {
+                mostrarResultado('Error de conexión al subir el modelo.', 'error');
+            }
+        };
+
+        // ── Crear plato (con modelo 3D opcional) ──────────────
+>>>>>>> Stashed changes
         document.getElementById('btnCrearPlato').addEventListener('click', async () => {
             const nombre    = document.getElementById('p_nombre').value.trim();
             const precio    = parseFloat(document.getElementById('p_precio').value);
@@ -533,6 +1027,33 @@
             if (!nombre || !precio) { mostrarResultado('Nombre y precio son obligatorios', 'error'); return; }
 
             try {
+<<<<<<< Updated upstream
+=======
+                // Paso 1: si hay imagen, subirla primero para obtener la URL
+                let imagen_url = '';
+                if (imagenArchivo) {
+                    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Subiendo imagen...';
+                    const fdImg = new FormData();
+                    fdImg.append('imagen', imagenArchivo);
+                    const resImg = await fetch(`${API_URL}/platos/upload-image`, {
+                        method: 'POST',
+                        headers,
+                        body: fdImg
+                    });
+                    const dataImg = await resImg.json();
+                    if (!resImg.ok) {
+                        mostrarResultado(dataImg.error || 'Error al subir la imagen.', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-plus"></i> Crear plato';
+                        return;
+                    }
+                    imagen_url = dataImg.imagen_url;
+                }
+
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Creando...';
+
+                // Paso 2: crear el plato con la URL ya resuelta
+>>>>>>> Stashed changes
                 const res = await fetch(`${API_URL}/platos`, {
                     method: 'POST',
                     headers: { ...headers, 'Content-Type': 'application/json' },
@@ -550,6 +1071,51 @@
                     const err = await res.json();
                     mostrarResultado(err.error || 'Error al crear plato', 'error');
                 }
+<<<<<<< Updated upstream
+=======
+
+                const data = await res.json();
+
+                // Paso 2: si tiene modelo, subirlo y asignarlo
+                if (modeloArchivo) {
+                    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Subiendo modelo...';
+                    const fd = new FormData();
+                    fd.append('modelo', modeloArchivo);
+                    fd.append('plato_id', data.id);
+
+                    const resModelo = await fetch(`${API_URL}/platos/upload-model`, {
+                        method: 'POST',
+                        headers,
+                        body: fd
+                    });
+
+                    const dataModelo = await resModelo.json();
+                    if (!resModelo.ok) {
+                        // El plato se creó pero el modelo falló — avisar sin error fatal
+                        mostrarResultado(
+                            `⚠️ Plato "${data.nombre}" creado, pero el modelo no se pudo subir: ${dataModelo.error}`,
+                            'error'
+                        );
+                        cargarPlatos();
+                        return;
+                    }
+                }
+
+                const ingMsg    = tags.length > 0 ? ` con ${tags.length} ingrediente(s)` : '';
+                const modeloMsg = modeloArchivo   ? ' y modelo 3D' : '';
+                mostrarResultado(`✅ Plato "${data.nombre}" creado${ingMsg}${modeloMsg}.`, 'exito');
+
+                // Limpiar formulario completo
+                ['p_nombre','p_precio','p_categoria','p_descripcion'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                tags.length = 0;
+                renderTags();
+                limpiarImagen();
+                limpiarModelo();
+                cargarPlatos();
+
+>>>>>>> Stashed changes
             } catch {
                 mostrarResultado('Error de conexión', 'error');
             }

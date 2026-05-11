@@ -39,6 +39,13 @@ app.use(express.json());
 
 // Servir archivos estáticos del frontend
 app.use(express.static(path.join(__dirname, '../FrontEnd')));
+<<<<<<< Updated upstream
+=======
+// Servir modelos 3D desde uploads/models/ → accesibles como /models/nombre.glb
+app.use('/models', express.static(path.join(__dirname, '../uploads/models')));
+// Servir imágenes de platos desde uploads/images/ → accesibles como /images/nombre.jpg
+app.use('/images', express.static(path.join(__dirname, '../uploads/images')));
+>>>>>>> Stashed changes
 
 // ==================== RUTAS PÚBLICAS ====================
 // Estas rutas NO requieren autenticación
