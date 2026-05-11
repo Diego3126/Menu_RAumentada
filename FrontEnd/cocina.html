@@ -252,6 +252,14 @@
                 p.estado === 'pendiente' || p.estado === 'en_preparacion'
             );
             const pedidos = await res.json();
+<<<<<<< Updated upstream
+=======
+
+            // Filtrar: cocina solo ve pendientes y en preparacion
+            const activos = pedidos.filter(p =>
+                p.estado === 'pendiente' || p.estado === 'en_preparacion'
+            );
+>>>>>>> Stashed changes
 
             document.getElementById('ultimaActualizacion').textContent =
                 `Última actualización: ${new Date().toLocaleTimeString('es-CO')}`;

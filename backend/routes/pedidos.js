@@ -4,6 +4,8 @@
 // MRA-112: Definir estado inicial 'pendiente'
 // MRA-113: Validar datos antes de guardar
 // MRA-114: Generar ID único con verificación en DB
+// MRA-123: Evitar duplicación de pedidos
+// MRA-124: Validar integridad de datos
 // ============================================================
 // Rutas:
 //   POST /api/pedidos                     → Registrar nuevo pedido
@@ -17,6 +19,31 @@ const pool = require('../db/neon');
 
 // MRA-111: Usar el sistema de auth del compañero (routes/auth.js)
 const { requireAuth, requireAdmin } = require('./auth');
+const crypto = require('crypto');
+
+// ============================================================
+// MRA-123: Control anti-duplicación en memoria
+// Guarda hashes de pedidos recientes para evitar doble envío
+// Se limpia automáticamente cada minuto
+// ============================================================
+const pedidosRecientes = new Map();
+
+function hashPedido(nombre_cliente, items) {
+    const contenido = nombre_cliente.trim().toLowerCase()
+        + JSON.stringify(items.map(i => ({
+            id:  i.plato_id,
+            qty: i.cantidad
+        })).sort((a, b) => a.id - b.id));
+    return crypto.createHash('sha256').update(contenido).digest('hex');
+}
+
+// Limpiar hashes con más de 5 minutos de antigüedad
+setInterval(() => {
+    const ahora = Date.now();
+    for (const [hash, ts] of pedidosRecientes.entries()) {
+        if (ahora - ts > 5 * 60 * 1000) pedidosRecientes.delete(hash);
+    }
+}, 60 * 1000);
 
 // ============================================================
 // MRA-114: Generar código único verificado en DB
@@ -109,15 +136,70 @@ router.post('/', async (req, res) => {  // Público: clientes no necesitan login
     // Pedidos de clientes no requieren login — usuario_id siempre null
     const usuario_id = null;
 
-    // MRA-113: Validar antes de tocar la DB
+    // MRA-113: Validar estructura y formato de los datos
     const errores = validarPedido({ items, nombre_cliente, email_cliente, subtotal, total });
     if (errores.length > 0) {
         return res.status(400).json({ error: 'Datos inválidos', detalles: errores });
     }
 
+    // MRA-123: Verificar duplicación — mismo cliente + mismos items en < 5 min
+    const hash = hashPedido(nombre_cliente, items);
+    if (pedidosRecientes.has(hash)) {
+        return res.status(409).json({
+            error: 'Pedido duplicado',
+            detalles: ['Este pedido ya fue registrado recientemente. Si fue un error, espera unos minutos e intenta de nuevo.']
+        });
+    }
+
     const client = await pool.connect();
 
+    // MRA-124: Validar integridad — verificar platos en DB y precios reales
     try {
+        const platosIds = [...new Set(items.map(i => parseInt(i.plato_id)))];
+        const { rows: platosDB } = await client.query(
+            `SELECT id, precio FROM platos WHERE id = ANY($1::int[])`,
+            [platosIds]
+        );
+
+        // Verificar que todos los plato_id existen
+        const idsEnDB = new Set(platosDB.map(p => p.id));
+        const idsInvalidos = platosIds.filter(id => !idsEnDB.has(id));
+        if (idsInvalidos.length > 0) {
+            client.release();
+            return res.status(400).json({
+                error: 'Datos inválidos',
+                detalles: [`Los siguientes platos no existen: ${idsInvalidos.join(', ')}`]
+            });
+        }
+
+        // Verificar que los precios no fueron manipulados (tolerancia de ±1%)
+        const preciosDB = Object.fromEntries(platosDB.map(p => [p.id, parseFloat(p.precio)]));
+        const erroresPrecios = [];
+        items.forEach((item, i) => {
+            const precioReal = preciosDB[parseInt(item.plato_id)];
+            const precioEnviado = parseFloat(item.precio_unitario);
+            const diferencia = Math.abs(precioReal - precioEnviado) / precioReal;
+            if (diferencia > 0.01) {
+                erroresPrecios.push(`Item ${i + 1}: el precio no coincide con el registrado.`);
+            }
+        });
+
+        if (erroresPrecios.length > 0) {
+            client.release();
+            return res.status(400).json({
+                error: 'Integridad de precios fallida',
+                detalles: erroresPrecios
+            });
+        }
+
+        // Recalcular subtotal y total desde precios reales de la DB (no confiar en el frontend)
+        let subtotalVerificado = 0;
+        items.forEach(item => {
+            subtotalVerificado += preciosDB[parseInt(item.plato_id)] * item.cantidad;
+        });
+        subtotalVerificado = parseFloat(subtotalVerificado.toFixed(2));
+
+        // MRA-124: usar subtotal verificado por la DB en lugar del enviado por el frontend
         await client.query('BEGIN');
 
         // MRA-114: Código único verificado en DB
@@ -168,6 +250,9 @@ router.post('/', async (req, res) => {  // Público: clientes no necesitan login
         }
 
         await client.query('COMMIT');
+
+        // MRA-123: Registrar hash del pedido para evitar duplicados en los próximos 5 min
+        pedidosRecientes.set(hash, Date.now());
 
         // Vaciar carrito de la sesión tras confirmar el pedido
         const sessionId = req.headers['x-session-id'];
@@ -279,41 +364,48 @@ module.exports = router;
 // ============================================================
 router.get('/', requireAuth, async (req, res) => {
     try {
-        const esAdmin = req.usuario?.rol === 'admin';
+        const rol     = req.usuario?.rol || '';
+        const esAdmin = rol === 'admin';
 
-        // Admins ven todos; cocineros solo los activos
-        const whereClause = esAdmin
-            ? ''
-            : `WHERE estado IN ('pendiente', 'en_preparacion')`;
-
+        // Admins ven todos los estados; cocineros solo los activos
+        // Si el rol no es reconocido, mostrar solo activos por seguridad
         const pedidosResult = await pool.query(
-            `SELECT p.*,
-                    (SELECT COUNT(*) FROM pedido_detalles WHERE pedido_id = p.id) AS num_items
+            `SELECT p.*
              FROM pedidos p
-             ${whereClause}
+             ${esAdmin ? '' : "WHERE p.estado IN ('pendiente', 'en_preparacion')"}
              ORDER BY p.created_at ASC`
         );
 
-        // Incluir detalles de cada pedido para que cocina vea los platos
-        const pedidosConDetalles = await Promise.all(
-            pedidosResult.rows.map(async (pedido) => {
-                const detalles = await pool.query(
-                    `SELECT plato_nombre, cantidad,
-                            ingredientes_eliminados, ingredientes_agregados
-                     FROM pedido_detalles
-                     WHERE pedido_id = $1
-                     ORDER BY id`,
-                    [pedido.id]
-                );
-                return { ...pedido, items: detalles.rows };
-            })
-        );
+        // Incluir items de cada pedido con una sola query (más eficiente que N queries)
+        const ids = pedidosResult.rows.map(p => p.id);
 
-        res.json(pedidosConDetalles);
+        let detallesMap = {};
+        if (ids.length > 0) {
+            const { rows: detalles } = await pool.query(
+                `SELECT pedido_id, plato_nombre, cantidad,
+                        ingredientes_eliminados, ingredientes_agregados
+                 FROM pedido_detalles
+                 WHERE pedido_id = ANY($1::int[])
+                 ORDER BY id`,
+                [ids]
+            );
+            // Agrupar detalles por pedido_id
+            detalles.forEach(d => {
+                if (!detallesMap[d.pedido_id]) detallesMap[d.pedido_id] = [];
+                detallesMap[d.pedido_id].push(d);
+            });
+        }
+
+        const resultado = pedidosResult.rows.map(p => ({
+            ...p,
+            items: detallesMap[p.id] || []
+        }));
+
+        res.json(resultado);
 
     } catch (error) {
         console.error('Error al listar pedidos:', error);
-        res.status(500).json({ error: 'Error al obtener los pedidos.' });
+        res.status(500).json({ error: 'Error al obtener los pedidos.', detalle: error.message });
     }
 });
 

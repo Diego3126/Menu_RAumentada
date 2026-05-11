@@ -5,8 +5,16 @@ const path   = require('path');
 const multer = require('multer');
 const { requireAuth, requireAdmin } = require('./auth');
 
-// ── Configuración de multer para subir modelos 3D ──────────────
-const storage = multer.diskStorage({
+// ── Función helper: sanitizar nombre de archivo ──────────────
+function sanitizarNombreArchivo(original, ext) {
+    return path.basename(original, ext)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+// ── Multer para modelos 3D (.glb/.gltf) ──────────────────────
+const storageModelos = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, path.join(__dirname, '../../uploads/models'));
     },
@@ -21,19 +29,38 @@ const storage = multer.diskStorage({
     }
 });
 
-const fileFilter = (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (ext === '.glb' || ext === '.gltf') {
-        cb(null, true);
-    } else {
-        cb(new Error('Solo se permiten archivos .glb o .gltf'));
-    }
-};
-
 const upload = multer({
-    storage,
-    fileFilter,
-    limits: { fileSize: 50 * 1024 * 1024 }  // máx 50 MB
+    storage: storageModelos,
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (ext === '.glb' || ext === '.gltf') cb(null, true);
+        else cb(new Error('Solo se permiten archivos .glb o .gltf'));
+    },
+    limits: { fileSize: 50 * 1024 * 1024 }
+});
+
+// ── Multer para imágenes de platos ────────────────────────────
+const storageImagenes = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, '../../uploads/images'));
+    },
+    filename: (req, file, cb) => {
+        const ext  = path.extname(file.originalname).toLowerCase();
+        const base = sanitizarNombreArchivo(file.originalname, ext);
+        // Agregar timestamp para evitar colisiones si dos platos tienen imagen con mismo nombre
+        cb(null, `${base}-${Date.now()}${ext}`);
+    }
+});
+
+const uploadImagen = multer({
+    storage: storageImagenes,
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        const permitidos = ['.jpg', '.jpeg', '.png', '.webp', '.avif'];
+        if (permitidos.includes(ext)) cb(null, true);
+        else cb(new Error('Solo se permiten imágenes JPG, PNG, WEBP o AVIF'));
+    },
+    limits: { fileSize: 10 * 1024 * 1024 }  // máx 10 MB
 });
 
 // Obtener todos los platos (público)
@@ -175,6 +202,44 @@ router.delete('/:id', requireAdmin, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error al eliminar plato' });
+    }
+});
+
+// POST /upload-image — subir imagen de plato y opcionalmente asignarla
+router.post('/upload-image', requireAdmin, uploadImagen.single('imagen'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No se recibió ninguna imagen válida (JPG, PNG, WEBP, AVIF)' });
+    }
+
+    const imagen_url = `/images/${req.file.filename}`;
+    const plato_id   = req.body.plato_id ? parseInt(req.body.plato_id) : null;
+
+    try {
+        if (plato_id) {
+            const result = await pool.query(
+                'UPDATE platos SET imagen_url = $1 WHERE id = $2 RETURNING id, nombre, imagen_url',
+                [imagen_url, plato_id]
+            );
+            if (result.rows.length === 0) {
+                return res.status(404).json({ error: 'Plato no encontrado' });
+            }
+            return res.json({
+                success:   true,
+                imagen_url,
+                plato:     result.rows[0],
+                mensaje:   `Imagen subida y asignada a "${result.rows[0].nombre}"`
+            });
+        }
+
+        res.json({
+            success:   true,
+            imagen_url,
+            mensaje:   `Imagen "${req.file.filename}" subida correctamente`
+        });
+
+    } catch (error) {
+        console.error('Error al subir imagen:', error);
+        res.status(500).json({ error: 'Error al procesar la imagen' });
     }
 });
 
