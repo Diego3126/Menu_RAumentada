@@ -285,8 +285,6 @@
 
         .btn-eliminar:hover { background: rgba(255,92,92,0.22); }
 
-<<<<<<< Updated upstream
-=======
         .btn-editar-precio {
             background: rgba(100,160,255,0.12);
             border: 1px solid rgba(100,160,255,0.2);
@@ -460,7 +458,6 @@
             border: 1px solid rgba(255,255,255,0.08);
         }
 
->>>>>>> Stashed changes
         @media (max-width: 768px) {
             nav { padding: 0 1rem; }
             .nav-links { display: none; }
@@ -579,8 +576,6 @@
                     <i class="fas fa-plus"></i> Crear
                 </button>
             </div>
-<<<<<<< Updated upstream
-=======
 
             <!-- Fila 2: descripción e imagen URL -->
             <div class="form-row-2">
@@ -645,7 +640,6 @@
             <button class="btn-crear" id="btnCrearPlato">
                 <i class="fas fa-plus"></i> Crear plato
             </button>
->>>>>>> Stashed changes
             <div class="resultado-msg" id="resultadoCrear"></div>
         </div>
 
@@ -744,10 +738,6 @@
                     <tr>
                         <td><strong>${p.nombre}</strong></td>
                         <td>${p.categoria || '—'}</td>
-<<<<<<< Updated upstream
-                        <td>$${parseFloat(p.precio).toFixed(2)}</td>
-                        <td><button class="btn-eliminar" data-id="${p.id}"><i class="fas fa-trash"></i> Eliminar</button></td>
-=======
                         <td class="precio-cell">
                             <span class="precio-display" id="display-${p.id}">
                                 $${parseFloat(p.precio).toFixed(2)}
@@ -792,7 +782,6 @@
                                 <i class="fas fa-trash"></i> Eliminar
                             </button>
                         </td>
->>>>>>> Stashed changes
                     </tr>`).join('');
 
                 tbody.querySelectorAll('.btn-eliminar').forEach(btn => {
@@ -815,8 +804,6 @@
             setTimeout(() => { el.className = 'resultado-msg'; }, 3000);
         }
 
-<<<<<<< Updated upstream
-=======
         // ── Upload y preview de imagen ─────────────────────────
         let imagenArchivo     = null;
         let imagenUrlSubida   = '';   // URL que devuelve el backend tras subir
@@ -1018,7 +1005,6 @@
         };
 
         // ── Crear plato (con modelo 3D opcional) ──────────────
->>>>>>> Stashed changes
         document.getElementById('btnCrearPlato').addEventListener('click', async () => {
             const nombre    = document.getElementById('p_nombre').value.trim();
             const precio    = parseFloat(document.getElementById('p_precio').value);
@@ -1027,8 +1013,6 @@
             if (!nombre || !precio) { mostrarResultado('Nombre y precio son obligatorios', 'error'); return; }
 
             try {
-<<<<<<< Updated upstream
-=======
                 // Paso 1: si hay imagen, subirla primero para obtener la URL
                 let imagen_url = '';
                 if (imagenArchivo) {
@@ -1053,7 +1037,6 @@
                 btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Creando...';
 
                 // Paso 2: crear el plato con la URL ya resuelta
->>>>>>> Stashed changes
                 const res = await fetch(`${API_URL}/platos`, {
                     method: 'POST',
                     headers: { ...headers, 'Content-Type': 'application/json' },
@@ -1071,8 +1054,6 @@
                     const err = await res.json();
                     mostrarResultado(err.error || 'Error al crear plato', 'error');
                 }
-<<<<<<< Updated upstream
-=======
 
                 const data = await res.json();
 
@@ -1115,7 +1096,6 @@
                 limpiarModelo();
                 cargarPlatos();
 
->>>>>>> Stashed changes
             } catch {
                 mostrarResultado('Error de conexión', 'error');
             }

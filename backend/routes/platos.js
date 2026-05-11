@@ -1,9 +1,5 @@
 const express = require('express');
 const router = express.Router();
-<<<<<<< Updated upstream
-const pool = require('../db/neon');
-const { requireAuth, requireAdmin } = require('./auth'); // ← unificado con nuestro sistema
-=======
 const pool   = require('../db/neon');
 const path   = require('path');
 const multer = require('multer');
@@ -62,7 +58,6 @@ const uploadImagen = multer({
     },
     limits: { fileSize: 10 * 1024 * 1024 }  // máx 10 MB
 });
->>>>>>> Stashed changes
 
 // Obtener todos los platos (público)
 router.get('/', async (req, res) => {
@@ -161,9 +156,6 @@ router.delete('/:id', requireAdmin, async (req, res) => {
     }
 });
 
-<<<<<<< Updated upstream
-module.exports = router;
-=======
 // POST /upload-image — subir imagen de plato y opcionalmente asignarla
 router.post('/upload-image', requireAdmin, uploadImagen.single('imagen'), async (req, res) => {
     if (!req.file) {
@@ -267,4 +259,3 @@ router.patch('/:id/model', requireAdmin, async (req, res) => {
 });
 
 module.exports = router;
->>>>>>> Stashed changes
