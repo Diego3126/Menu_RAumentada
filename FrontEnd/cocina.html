@@ -204,13 +204,6 @@
 
         .btn-listo:hover { background: rgba(129,199,132,0.25); }
 
-        .btn-completado {
-            background: rgba(129,199,132,0.08);
-            color: rgba(129,199,132,0.6);
-            border: 1px solid rgba(129,199,132,0.15);
-            font-style: italic;
-        }
-
         .empty-state {
             grid-column: 1 / -1;
             text-align: center;
@@ -221,6 +214,23 @@
         .empty-state i { font-size: 3rem; margin-bottom: 1rem; display: block; }
 
         /* RESPONSIVE MRA-69 */
+        .btn-limpiar-listos {
+            background: rgba(129,199,132,0.1);
+            border: 1px solid rgba(129,199,132,0.3);
+            color: #81c784;
+            padding: 0.5rem 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-limpiar-listos:hover { background: rgba(129,199,132,0.2); }
+        .btn-limpiar-listos:disabled { opacity: 0.4; cursor: not-allowed; }
+
         @media (max-width: 600px) {
             nav { padding: 0 1rem; }
             .main { padding: 1rem; }
@@ -244,9 +254,14 @@
             <h1>Pedidos en curso</h1>
             <p style="color:rgba(240,235,227,0.4);font-size:0.85rem;margin-top:0.2rem;" id="ultimaActualizacion"></p>
         </div>
-        <button class="refresh-btn" onclick="cargarPedidos()">
-            <i class="fas fa-rotate-right"></i> Actualizar
-        </button>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+            <button class="refresh-btn" onclick="cargarPedidos()">
+                <i class="fas fa-rotate-right"></i> Actualizar
+            </button>
+            <button class="btn-limpiar-listos" id="btnLimpiarListos" onclick="limpiarListos()">
+                <i class="fas fa-broom"></i> Limpiar listos
+            </button>
+        </div>
         <div class="filtros">
             <button class="filtro-btn active-todos" data-filtro="todos" onclick="setFiltro('todos', this)">Todos</button>
             <button class="filtro-btn" data-filtro="pendiente" onclick="setFiltro('pendiente', this)">🟡 Pendiente</button>
@@ -309,15 +324,22 @@
 
             const pedidos = await res.json();
 
-            // Filtrar: cocina ve pendientes, en preparacion y listos
+            // Mostrar pendientes, en_preparacion y listos (listos se pueden limpiar manualmente)
             const activos = pedidos.filter(p =>
-                p.estado === 'pendiente' || p.estado === 'en_preparacion' || p.estado === 'listo'
+                p.estado === 'pendiente' ||
+                p.estado === 'en_preparacion' ||
+                p.estado === 'listo'
             );
 
-            // MRA-134: Aplicar filtro adicional seleccionado por el usuario
+            // Aplicar filtro adicional seleccionado por el usuario
             const visibles = filtroActivo === 'todos'
                 ? activos
                 : activos.filter(p => p.estado === filtroActivo);
+
+            // Mostrar/ocultar botón de limpiar según si hay pedidos listos
+            const hayListos = activos.some(p => p.estado === 'listo');
+            const btnLimpiar = document.getElementById('btnLimpiarListos');
+            if (btnLimpiar) btnLimpiar.style.display = hayListos ? 'flex' : 'none';
 
             // MRA-133: Ordenar del más antiguo al más nuevo (el que lleva más esperando va primero)
             visibles.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -334,7 +356,7 @@
             }
 
             if (visibles.length === 0) {
-                const labels = { pendiente: 'pendientes', en_preparacion: 'en preparación', listo: 'listos', todos: '' };
+                const labels = { pendiente: 'pendientes', en_preparacion: 'en preparación', todos: '' };
                 grid.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-filter" style="color:rgba(240,235,227,0.3)"></i>
@@ -379,17 +401,17 @@
                         &nbsp;·&nbsp; Total: <strong style="color:#ff8c42">$${parseFloat(p.total || 0).toFixed(2)}</strong>
                     </div>
                     <div class="pedido-actions">
-                        ${p.estado === 'listo' ? `
-                            <div class="btn-accion btn-completado" style="text-align:center;cursor:default;">
-                                <i class="fas fa-check-circle"></i> Pedido listo
-                            </div>` : `
-                            ${p.estado === 'pendiente' ? `
+                        ${p.estado === 'pendiente' ? `
                             <button class="btn-accion btn-proceso" onclick="cambiarEstado(${p.id}, 'en_preparacion', this)">
                                 <i class="fas fa-fire"></i> En preparación
                             </button>` : ''}
+                        ${p.estado !== 'listo' ? `
                             <button class="btn-accion btn-listo" onclick="cambiarEstado(${p.id}, 'listo', this)">
                                 <i class="fas fa-check"></i> Listo
-                            </button>`}
+                            </button>` : `
+                            <span style="font-size:0.78rem;color:#81c784;display:flex;align-items:center;gap:0.3rem;padding:0.3rem 0;">
+                                <i class="fas fa-check-double"></i> Entregado al cliente
+                            </span>`}
                     </div>
                 </div>`;
             }).join('');
@@ -442,6 +464,44 @@
             errDiv.textContent = `No se pudo actualizar el estado: ${err.message}`;
             document.body.appendChild(errDiv);
             setTimeout(() => errDiv.remove(), 4000);
+        }
+    }
+
+    // Limpiar todos los pedidos con estado 'listo'
+    async function limpiarListos() {
+        const token  = localStorage.getItem('token');
+        const btn    = document.getElementById('btnLimpiarListos');
+
+        if (!confirm('¿Eliminar todos los pedidos listos del panel?')) return;
+
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Limpiando...'; }
+
+        try {
+            const res  = await fetch(`${API_URL}/pedidos/listos`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                // Mostrar confirmación flotante
+                const msg = document.createElement('div');
+                msg.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#1a2e1a;border:1px solid rgba(129,199,132,0.4);color:#81c784;padding:0.8rem 1.2rem;border-radius:12px;font-size:0.88rem;z-index:999;';
+                msg.innerHTML = `<i class="fas fa-broom"></i> ${data.mensaje}`;
+                document.body.appendChild(msg);
+                setTimeout(() => msg.remove(), 3500);
+                await cargarPedidos();
+            } else {
+                throw new Error(data.error || 'Error al limpiar');
+            }
+        } catch (err) {
+            const errDiv = document.createElement('div');
+            errDiv.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:#2e1a1a;border:1px solid rgba(255,107,107,0.4);color:#ff6b6b;padding:0.8rem 1.2rem;border-radius:12px;font-size:0.88rem;z-index:999;';
+            errDiv.textContent = `Error: ${err.message}`;
+            document.body.appendChild(errDiv);
+            setTimeout(() => errDiv.remove(), 4000);
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-broom"></i> Limpiar listos'; }
         }
     }
 

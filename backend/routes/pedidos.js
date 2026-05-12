@@ -362,6 +362,31 @@ router.get('/recientes/limite/:limite', requireAdmin, async (req, res) => {
     }
 });
 
+// ============================================================
+// DELETE /api/pedidos/listos — Eliminar todos los pedidos con estado 'listo'
+// Solo cocineros y admins pueden limpiar la vista
+// ============================================================
+router.delete('/listos', requireAuth, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `DELETE FROM pedidos WHERE estado = 'listo'
+             RETURNING id, codigo_pedido`
+        );
+
+        res.json({
+            success: true,
+            eliminados: result.rows.length,
+            mensaje: result.rows.length === 0
+                ? 'No había pedidos listos para eliminar'
+                : `${result.rows.length} pedido(s) eliminado(s) correctamente`
+        });
+
+    } catch (error) {
+        console.error('Error al limpiar pedidos listos:', error);
+        res.status(500).json({ error: 'Error al eliminar los pedidos listos.' });
+    }
+});
+
 module.exports = router;
 
 // ============================================================
@@ -374,18 +399,12 @@ router.get('/', requireAuth, async (req, res) => {
         const rol     = req.usuario?.rol || '';
         const esAdmin = rol === 'admin';
 
-        // Admins ven todos; cocineros ven pendiente + en_preparacion + listo
+        // Admins ven todos los estados; cocineros solo los activos
         // Si el rol no es reconocido, mostrar solo activos por seguridad
-        const esCocinero = rol === 'cocinero';
-        const whereClause = esAdmin
-            ? ''
-            : esCocinero
-                ? "WHERE p.estado IN ('pendiente', 'en_preparacion', 'listo')"
-                : "WHERE p.estado IN ('pendiente', 'en_preparacion')";
         const pedidosResult = await pool.query(
             `SELECT p.*
              FROM pedidos p
-             ${whereClause}
+             ${esAdmin ? '' : "WHERE p.estado IN ('pendiente', 'en_preparacion', 'listo')"}
              ORDER BY p.created_at ASC`
         );
 
