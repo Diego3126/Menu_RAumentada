@@ -374,12 +374,18 @@ router.get('/', requireAuth, async (req, res) => {
         const rol     = req.usuario?.rol || '';
         const esAdmin = rol === 'admin';
 
-        // Admins ven todos los estados; cocineros solo los activos
+        // Admins ven todos; cocineros ven pendiente + en_preparacion + listo
         // Si el rol no es reconocido, mostrar solo activos por seguridad
+        const esCocinero = rol === 'cocinero';
+        const whereClause = esAdmin
+            ? ''
+            : esCocinero
+                ? "WHERE p.estado IN ('pendiente', 'en_preparacion', 'listo')"
+                : "WHERE p.estado IN ('pendiente', 'en_preparacion')";
         const pedidosResult = await pool.query(
             `SELECT p.*
              FROM pedidos p
-             ${esAdmin ? '' : "WHERE p.estado IN ('pendiente', 'en_preparacion')"}
+             ${whereClause}
              ORDER BY p.created_at ASC`
         );
 

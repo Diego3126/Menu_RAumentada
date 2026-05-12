@@ -842,6 +842,31 @@ main {
     background: linear-gradient(135deg, #ff9a55, #f0721f);
 }
 
+/* Botón Iniciar sesión — mismo formato que .cart-icon */
+#loginLink {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    font-size: 0.85rem;
+    text-decoration: none;
+    background: linear-gradient(135deg, #4caf50, #2e7d32);
+    padding: 0.55rem 1.1rem 0.55rem 0.9rem;
+    border-radius: 50px;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+
+#loginLink:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(76, 175, 80, 0.55);
+    background: linear-gradient(135deg, #66bb6a, #388e3c);
+}
+
 .cart-count {
     position: absolute;
     top: -6px;
