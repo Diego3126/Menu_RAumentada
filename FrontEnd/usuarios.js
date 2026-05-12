@@ -1,5 +1,5 @@
 // Frontend functions to manage users (admin)
-const API_URL = 'http://localhost:3000/api';
+// API_URL viene de config.js
 
 async function cargarUsuarios() {
     const token = localStorage.getItem('token');

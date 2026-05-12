@@ -209,7 +209,8 @@ class Viewer3D {
 
             if (dishData.dishId && !modelPath.includes('http')) {
                 try {
-                    const raResponse = await fetch('http://localhost:5300/api/ra/session', {
+                    const raServiceUrl = window.location.hostname === 'localhost' ? 'http://localhost:5300' : window.BACKEND_URL;
+                    const raResponse = await fetch(`${raServiceUrl}/api/ra/session`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

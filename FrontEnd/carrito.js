@@ -1,7 +1,5 @@
 // Configuración
-const API_URL = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000/api'
-    : '/api';
+// API_URL viene de config.js
 
 // Variables globales
 let sessionId = null;

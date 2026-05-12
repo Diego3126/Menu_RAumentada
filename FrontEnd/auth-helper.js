@@ -5,7 +5,7 @@
 // Incluir este script en admin.html y cocina.html
 // ============================================================
 
-const API_URL = 'http://localhost:3000/api';
+// API_URL viene de config.js (incluido antes en cada HTML)
 
 /**
  * Obtiene el usuario de localStorage.
