@@ -78,6 +78,38 @@
 
         .refresh-btn:hover { background: rgba(76,175,80,0.2); }
 
+        /* FILTROS MRA-134 */
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filtros {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .filtro-btn {
+            padding: 0.5rem 0.9rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            color: rgba(240,235,227,0.5);
+        }
+
+        .filtro-btn:hover { background: rgba(255,255,255,0.08); color: #f0ebe3; }
+        .filtro-btn.active-todos         { background: rgba(255,255,255,0.12);  color: #f0ebe3;  border-color: rgba(255,255,255,0.25); }
+        .filtro-btn.active-pendiente     { background: rgba(255,213,79,0.15);   color: #ffd54f;  border-color: rgba(255,213,79,0.35);  }
+        .filtro-btn.active-en_preparacion{ background: rgba(100,181,246,0.15);  color: #64b5f6;  border-color: rgba(100,181,246,0.35); }
+        .filtro-btn.active-listo         { background: rgba(129,199,132,0.15);  color: #81c784;  border-color: rgba(129,199,132,0.35); }
+
         /* PEDIDOS GRID */
         .pedidos-grid {
             display: grid;
@@ -208,6 +240,12 @@
         <button class="refresh-btn" onclick="cargarPedidos()">
             <i class="fas fa-rotate-right"></i> Actualizar
         </button>
+        <div class="filtros">
+            <button class="filtro-btn active-todos" data-filtro="todos" onclick="setFiltro('todos', this)">Todos</button>
+            <button class="filtro-btn" data-filtro="pendiente" onclick="setFiltro('pendiente', this)">🟡 Pendiente</button>
+            <button class="filtro-btn" data-filtro="en_preparacion" onclick="setFiltro('en_preparacion', this)">🔵 En preparación</button>
+            <button class="filtro-btn" data-filtro="listo" onclick="setFiltro('listo', this)">🟢 Listo</button>
+        </div>
     </div>
 
     <div class="pedidos-grid" id="pedidosGrid">
@@ -224,6 +262,21 @@
         cargarPedidos();
         // MRA-122: Auto-refresh cada 30 segundos para ver pedidos nuevos
         setInterval(cargarPedidos, 30000);
+    }
+
+    // MRA-134: Filtro activo — 'todos' por defecto
+    let filtroActivo = 'todos';
+
+    function setFiltro(filtro, btnEl) {
+        filtroActivo = filtro;
+        // Limpiar clases activas de todos los botones
+        document.querySelectorAll('.filtro-btn').forEach(b => {
+            b.className = 'filtro-btn';
+        });
+        // Activar el botón seleccionado
+        btnEl.classList.add(`active-${filtro}`);
+        // Re-renderizar con el filtro aplicado
+        cargarPedidos();
     }
 
     // MRA-122: Cargar y mostrar pedidos visibles para cocina
@@ -253,6 +306,14 @@
             const activos = pedidos.filter(p =>
                 p.estado === 'pendiente' || p.estado === 'en_preparacion'
             );
+
+            // MRA-134: Aplicar filtro adicional seleccionado por el usuario
+            const visibles = filtroActivo === 'todos'
+                ? activos
+                : activos.filter(p => p.estado === filtroActivo);
+
+            // MRA-133: Ordenar del más antiguo al más nuevo (el que lleva más esperando va primero)
+            visibles.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
             document.getElementById('ultimaActualizacion').textContent =
                 `Última actualización: ${new Date().toLocaleTimeString('es-CO')}`;
 
@@ -265,8 +326,18 @@
                 return;
             }
 
+            if (visibles.length === 0) {
+                const labels = { pendiente: 'pendientes', en_preparacion: 'en preparación', todos: '' };
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-filter" style="color:rgba(240,235,227,0.3)"></i>
+                        No hay pedidos ${labels[filtroActivo] || ''} en este momento.
+                    </div>`;
+                return;
+            }
+
             // MRA-122: Renderizar tarjeta con items detallados de cada pedido
-            grid.innerHTML = activos.map(p => {
+            grid.innerHTML = visibles.map(p => {
                 const estadoClase = p.estado === 'en_preparacion' ? 'en-proceso' : p.estado;
                 const badgeClase  = p.estado === 'en_preparacion' ? 'en-proceso' : p.estado;
                 const estadoLabel = p.estado === 'en_preparacion' ? 'En preparación' : 
