@@ -7,6 +7,77 @@ const API_URL = window.location.hostname === 'localhost'
 let sessionId = null;
 let carritoItems = [];
 
+// ============================================================
+// MRA-126: Utilidades para manejo robusto de errores de envío
+// ============================================================
+
+/**
+ * fetch con timeout — aborta si el servidor no responde en `ms` milisegundos
+ */
+async function fetchConTimeout(url, opciones = {}, ms = 10000) {
+    const controller = new AbortController();
+    const timerId    = setTimeout(() => controller.abort(), ms);
+    try {
+        const res = await fetch(url, { ...opciones, signal: controller.signal });
+        clearTimeout(timerId);
+        return res;
+    } catch (err) {
+        clearTimeout(timerId);
+        if (err.name === 'AbortError') {
+            throw new Error('TIMEOUT');
+        }
+        throw err;
+    }
+}
+
+/**
+ * fetch con reintentos automáticos — reintenta `intentos` veces con espera exponencial
+ * Solo reintenta en errores de red o timeout, NO en errores 4xx del servidor
+ */
+async function fetchConReintentos(url, opciones = {}, intentos = 3, msTimeout = 10000) {
+    let ultimoError;
+    for (let i = 0; i < intentos; i++) {
+        try {
+            const res = await fetchConTimeout(url, opciones, msTimeout);
+            // No reintentar errores del cliente (400, 401, 403, 409)
+            if (res.status >= 400 && res.status < 500) return res;
+            // Reintentar errores del servidor (500+) solo si no es el último intento
+            if (res.status >= 500 && i < intentos - 1) {
+                await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+                continue;
+            }
+            return res;
+        } catch (err) {
+            ultimoError = err;
+            const esMensajeReintentable = err.message === 'TIMEOUT' ||
+                err.message === 'Failed to fetch' ||
+                err instanceof TypeError;
+
+            if (esMensajeReintentable && i < intentos - 1) {
+                const espera = 1000 * (i + 1);
+                console.warn(`Intento ${i + 1} fallido (${err.message}). Reintentando en ${espera}ms...`);
+                await new Promise(r => setTimeout(r, espera));
+            } else {
+                throw ultimoError;
+            }
+        }
+    }
+    throw ultimoError;
+}
+
+/**
+ * MRA-126: Traducir errores de red a mensajes amigables para el usuario
+ */
+function mensajeErrorRed(err) {
+    if (err.message === 'TIMEOUT') {
+        return 'El servidor tardó demasiado en responder. Verifica tu conexión e intenta de nuevo.';
+    }
+    if (err.message === 'Failed to fetch' || err instanceof TypeError) {
+        return 'Sin conexión a internet. Verifica tu red e intenta de nuevo.';
+    }
+    return 'Error inesperado. Por favor intenta de nuevo.';
+}
+
 // Elementos DOM
 const carritoItemsEl = document.getElementById('carritoItems');
 const subtotalEl = document.getElementById('subtotal');
@@ -455,23 +526,23 @@ continuarPedidoBtn?.addEventListener('click', async () => {
     setBtnCargando(continuarPedidoBtn, true, '', 'Enviando pedido...');
 
     try {
-        const response = await fetch(`${API_URL}/pedidos`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-session-id': sessionId
-                // Sin Authorization — clientes no necesitan login
+        // MRA-126: Usar fetchConReintentos — 3 intentos, timeout 10s cada uno
+        const response = await fetchConReintentos(
+            `${API_URL}/pedidos`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-session-id': sessionId
+                },
+                body: JSON.stringify({
+                    items, nombre_cliente, telefono_cliente,
+                    email_cliente, notas, subtotal, total
+                })
             },
-            body: JSON.stringify({
-                items,
-                nombre_cliente,
-                telefono_cliente,
-                email_cliente,
-                notas,
-                subtotal,
-                total
-            })
-        });
+            3,    // máximo 3 intentos
+            10000 // timeout de 10 segundos por intento
+        );
 
         const data = await response.json();
 
@@ -481,10 +552,24 @@ continuarPedidoBtn?.addEventListener('click', async () => {
                 window.location.href = `confirmacion.html?codigo=${data.pedido.codigo}`;
             }, 1200);
 
+        } else if (response.status === 409) {
+            // MRA-126: Pedido duplicado — mensaje específico
+            mostrarNotificacion(
+                'Este pedido ya fue registrado recientemente. Si fue un error, espera unos minutos.',
+                'warning', 6000
+            );
+
         } else if (response.status === 400 && data.detalles) {
             data.detalles.forEach((err, i) => {
                 setTimeout(() => mostrarNotificacion(err, 'error', 5000), i * 300);
             });
+
+        } else if (response.status >= 500) {
+            // MRA-126: Error del servidor — ya se reintentó 3 veces
+            mostrarNotificacion(
+                'El servidor no está disponible. Intenta de nuevo en unos minutos.',
+                'error', 6000
+            );
 
         } else {
             mostrarNotificacion(
@@ -494,12 +579,9 @@ continuarPedidoBtn?.addEventListener('click', async () => {
         }
 
     } catch (error) {
-        console.error('Error al confirmar pedido:', error);
-        if (error instanceof TypeError && error.message === 'Failed to fetch') {
-            mostrarNotificacion('Sin conexión. Verifica tu internet e intenta de nuevo.', 'error', 5000);
-        } else {
-            mostrarNotificacion('Error inesperado. Por favor intenta de nuevo.', 'error');
-        }
+        // MRA-126: Error de red o timeout tras 3 reintentos
+        console.error('Error al confirmar pedido (tras reintentos):', error);
+        mostrarNotificacion(mensajeErrorRed(error), 'error', 6000);
     } finally {
         setBtnCargando(continuarPedidoBtn, false, '<i class="fas fa-arrow-right"></i> Confirmar pedido');
     }

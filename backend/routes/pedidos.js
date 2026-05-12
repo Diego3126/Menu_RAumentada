@@ -154,6 +154,7 @@ router.post('/', async (req, res) => {  // Público: clientes no necesitan login
     const client = await pool.connect();
 
     // MRA-124: Validar integridad — verificar platos en DB y precios reales
+    // Nota: NO llamar client.release() aquí — lo maneja el finally al final del try principal
     try {
         const platosIds = [...new Set(items.map(i => parseInt(i.plato_id)))];
         const { rows: platosDB } = await client.query(
@@ -165,6 +166,7 @@ router.post('/', async (req, res) => {  // Público: clientes no necesitan login
         const idsEnDB = new Set(platosDB.map(p => p.id));
         const idsInvalidos = platosIds.filter(id => !idsEnDB.has(id));
         if (idsInvalidos.length > 0) {
+            // No hacer BEGIN — liberar y retornar sin transacción
             client.release();
             return res.status(400).json({
                 error: 'Datos inválidos',
@@ -176,15 +178,16 @@ router.post('/', async (req, res) => {  // Público: clientes no necesitan login
         const preciosDB = Object.fromEntries(platosDB.map(p => [p.id, parseFloat(p.precio)]));
         const erroresPrecios = [];
         items.forEach((item, i) => {
-            const precioReal = preciosDB[parseInt(item.plato_id)];
+            const precioReal    = preciosDB[parseInt(item.plato_id)];
             const precioEnviado = parseFloat(item.precio_unitario);
-            const diferencia = Math.abs(precioReal - precioEnviado) / precioReal;
+            const diferencia    = Math.abs(precioReal - precioEnviado) / precioReal;
             if (diferencia > 0.01) {
                 erroresPrecios.push(`Item ${i + 1}: el precio no coincide con el registrado.`);
             }
         });
 
         if (erroresPrecios.length > 0) {
+            // No hacer BEGIN — liberar y retornar sin transacción
             client.release();
             return res.status(400).json({
                 error: 'Integridad de precios fallida',
@@ -274,11 +277,15 @@ router.post('/', async (req, res) => {  // Público: clientes no necesitan login
         });
 
     } catch (error) {
-        await client.query('ROLLBACK');
+        // Solo hacer ROLLBACK si BEGIN fue ejecutado (después de las validaciones MRA-124)
+        try { await client.query('ROLLBACK'); } catch (_) {}
         console.error('Error al registrar pedido:', error);
-        res.status(500).json({ error: 'Error al registrar el pedido', details: error.message });
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Error al registrar el pedido', details: error.message });
+        }
     } finally {
-        client.release();
+        // Liberar solo si el cliente no fue liberado ya en las validaciones MRA-124
+        try { client.release(); } catch (_) {}
     }
 });
 
