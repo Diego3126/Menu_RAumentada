@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido Confirmado - Restaurante Delicias</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-image: url('https://wallpapercat.com/w/full/f/7/9/584472-3840x2160-desktop-4k-restaurant-background-image.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 8, 5, 0.65);
+            z-index: 0;
+        }
+
+        .confirmacion-card {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 520px;
+            overflow: hidden;
+            animation: cardIn 0.5s ease;
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Franja superior con check animado */
+        .confirmacion-header {
+            background: linear-gradient(135deg, rgba(107,203,119,0.2), rgba(76,175,80,0.08));
+            border-bottom: 1px solid rgba(107, 203, 119, 0.2);
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+
+        .check-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6bcb77, #4caf50);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 8px 30px rgba(107, 203, 119, 0.4);
+            animation: popIn 0.4s 0.2s both cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .confirmacion-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: white;
+            margin-bottom: 0.4rem;
+        }
+
+        .confirmacion-header p {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Código del pedido */
+        .codigo-pedido {
+            margin: 1.5rem 2rem;
+            background: rgba(255, 140, 66, 0.1);
+            border: 1px solid rgba(255, 140, 66, 0.25);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .codigo-pedido .label {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.4);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .codigo-pedido .codigo {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ff8c42;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.05em;
+        }
+
+        .codigo-pedido .copy-btn {
+            background: rgba(255,140,66,0.15);
+            border: 1px solid rgba(255,140,66,0.25);
+            color: #ff8c42;
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .codigo-pedido .copy-btn:hover {
+            background: rgba(255,140,66,0.25);
+        }
+
+        /* Detalles del pedido */
+        .detalles-section {
+            padding: 0 2rem 1.5rem;
+        }
+
+        .detalles-titulo {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 1rem;
+        }
+
+        .detalle-fila {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0.65rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            gap: 1rem;
+        }
+
+        .detalle-fila:last-child { border-bottom: none; }
+
+        .detalle-fila .campo {
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.4);
+            min-width: 80px;
+        }
+
+        .detalle-fila .valor {
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.8);
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .detalle-fila.total-fila .campo { color: white; font-weight: 600; font-size: 0.95rem; }
+        .detalle-fila.total-fila .valor { color: #ff8c42; font-weight: 700; font-size: 1.1rem; }
+
+        /* Items del pedido */
+        .items-lista {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .item-linea {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .item-linea:last-child { border-bottom: none; }
+        .item-linea .item-precio { color: #ff8c42; font-weight: 600; white-space: nowrap; }
+
+        /* Estado */
+        .estado-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255, 213, 79, 0.12);
+            border: 1px solid rgba(255, 213, 79, 0.25);
+            color: #ffd54f;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+        }
+
+        .estado-badge .dot {
+            width: 6px;
+            height: 6px;
+            background: #ffd54f;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Loading skeleton */
+        .skeleton-line {
+            height: 14px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 6px;
+            margin-bottom: 0.6rem;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Mensaje de cocina */
+        .cocina-msg {
+            margin: 0 2rem 1.5rem;
+            background: rgba(100, 181, 246, 0.08);
+            border: 1px solid rgba(100, 181, 246, 0.2);
+            border-radius: 12px;
+            padding: 0.9rem 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .cocina-msg i { color: #64b5f6; font-size: 1.1rem; flex-shrink: 0; }
+
+        /* Botones */
+        .acciones {
+            padding: 0 2rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn-menu {
+            background: linear-gradient(135deg, #ff8c42, #e5631a);
+            color: white;
+            border: none;
+            padding: 0.9rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+            box-shadow: 0 4px 20px rgba(255,140,66,0.35);
+            transition: all 0.25s;
+        }
+
+        .btn-menu:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255,140,66,0.5);
+        }
+
+        .btn-nuevo {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.6);
+            padding: 0.75rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+            transition: all 0.2s;
+        }
+
+        .btn-nuevo:hover {
+            border-color: rgba(255,255,255,0.3);
+            color: white;
+        }
+
+        /* Error state */
+        .error-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .error-state i {
+            font-size: 2.5rem;
+            color: rgba(255,107,107,0.6);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 1rem; }
+            .confirmacion-header { padding: 2rem 1.25rem; }
+            .codigo-pedido { margin: 1.25rem 1.25rem; }
+            .detalles-section { padding: 0 1.25rem 1.25rem; }
+            .cocina-msg { margin: 0 1.25rem 1.25rem; }
+            .acciones { padding: 0 1.25rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="confirmacion-card" id="card">
+
+    <!-- Header con check -->
+    <div class="confirmacion-header">
+        <div class="check-circle">
+            <i class="fas fa-check"></i>
+        </div>
+        <h1>¡Pedido confirmado!</h1>
+        <p>Tu pedido ha sido enviado a cocina</p>
+    </div>
+
+    <!-- Código del pedido -->
+    <div class="codigo-pedido">
+        <div>
+            <div class="label">Código de pedido</div>
+            <div class="codigo" id="codigoPedido">—</div>
+        </div>
+        <button class="copy-btn" id="copyBtn" onclick="copiarCodigo()">
+            <i class="fas fa-copy"></i> Copiar
+        </button>
+    </div>
+
+    <!-- Detalles -->
+    <div class="detalles-section" id="detallesSection">
+        <!-- Skeleton mientras carga -->
+        <div class="skeleton-line" style="width:40%; margin-bottom:1rem;"></div>
+        <div class="skeleton-line" style="width:100%;"></div>
+        <div class="skeleton-line" style="width:80%;"></div>
+        <div class="skeleton-line" style="width:60%;"></div>
+    </div>
+
+    <!-- Mensaje cocina -->
+    <div class="cocina-msg">
+        <i class="fas fa-fire-burner"></i>
+        <span>Tu pedido está siendo preparado. Te avisaremos cuando esté listo.</span>
+    </div>
+
+    <!-- Botones -->
+    <div class="acciones">
+        <a href="index.html" class="btn-menu">
+            <i class="fas fa-utensils"></i> Volver al menú
+        </a>
+        <a href="carrito.html" class="btn-nuevo">
+            Hacer otro pedido
+        </a>
+    </div>
+
+</div>
+
+<script>
+    const API_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:3000/api'
+        : '/api';
+
+    // Obtener código de la URL
+    const params = new URLSearchParams(window.location.search);
+    const codigo = params.get('codigo');
+
+    document.getElementById('codigoPedido').textContent = codigo || '—';
+
+    // Cargar detalles del pedido
+    async function cargarPedido() {
+        if (!codigo) {
+            mostrarError('No se encontró el código del pedido.');
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_URL}/pedidos/${codigo}`);
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const data = await res.json();
+            const pedido   = data.pedido;
+            const detalles = data.detalles || [];
+
+            // Construir lista de items
+            const itemsHtml = detalles.map(item => {
+                let extras = '';
+                if (item.ingredientes_eliminados && item.ingredientes_eliminados !== 'Ninguno' && item.ingredientes_eliminados.trim() !== '')
+                    extras += `<span style="color:#ff6b6b;font-size:0.78rem;"> · Sin: ${item.ingredientes_eliminados}</span>`;
+                if (item.ingredientes_agregados && item.ingredientes_agregados !== 'Ninguno' && item.ingredientes_agregados.trim() !== '')
+                    extras += `<span style="color:#6bcb77;font-size:0.78rem;"> · Extra: ${item.ingredientes_agregados}</span>`;
+
+                return `<div class="item-linea">
+                    <span><strong>×${item.cantidad}</strong> ${item.plato_nombre}${extras}</span>
+                    <span class="item-precio">$${parseFloat(item.subtotal).toFixed(2)}</span>
+                </div>`;
+            }).join('');
+
+            // Formatear fecha
+            const fecha = new Date(pedido.created_at).toLocaleString('es-CO', {
+                dateStyle: 'medium', timeStyle: 'short'
+            });
+
+            const estadoHtml = `<span class="estado-badge">
+                <span class="dot"></span> Pendiente — en cocina
+            </span>`;
+
+            document.getElementById('detallesSection').innerHTML = `
+                <p class="detalles-titulo"><i class="fas fa-receipt" style="margin-right:0.4rem;"></i>Resumen</p>
+
+                <div class="detalle-fila">
+                    <span class="campo">Cliente</span>
+                    <span class="valor">${pedido.nombre_cliente}</span>
+                </div>
+                ${pedido.telefono_cliente ? `
+                <div class="detalle-fila">
+                    <span class="campo">Teléfono</span>
+                    <span class="valor">${pedido.telefono_cliente}</span>
+                </div>` : ''}
+                ${pedido.email_cliente ? `
+                <div class="detalle-fila">
+                    <span class="campo">Email</span>
+                    <span class="valor">${pedido.email_cliente}</span>
+                </div>` : ''}
+                ${pedido.notas ? `
+                <div class="detalle-fila">
+                    <span class="campo">Notas</span>
+                    <span class="valor" style="color:rgba(255,255,255,0.55); font-style:italic;">${pedido.notas}</span>
+                </div>` : ''}
+                <div class="detalle-fila">
+                    <span class="campo">Fecha</span>
+                    <span class="valor">${fecha}</span>
+                </div>
+                <div class="detalle-fila">
+                    <span class="campo">Estado</span>
+                    <span class="valor">${estadoHtml}</span>
+                </div>
+
+                <div style="margin: 1rem 0 0.5rem;">
+                    <p class="detalles-titulo"><i class="fas fa-list" style="margin-right:0.4rem;"></i>Platos</p>
+                    <div class="items-lista">${itemsHtml}</div>
+                </div>
+
+                <div class="detalle-fila total-fila" style="margin-top:0.25rem;">
+                    <span class="campo">Total</span>
+                    <span class="valor">$${parseFloat(pedido.total).toFixed(2)}</span>
+                </div>
+            `;
+
+        } catch (err) {
+            console.error('Error cargando pedido:', err);
+            // Si no se puede cargar el detalle, mostrar solo el código sin error ruidoso
+            document.getElementById('detallesSection').innerHTML = `
+                <div style="text-align:center; padding:1.5rem 0; color:rgba(255,255,255,0.35); font-size:0.88rem;">
+                    <i class="fas fa-check-circle" style="color:#6bcb77; font-size:1.5rem; display:block; margin-bottom:0.5rem;"></i>
+                    Pedido registrado correctamente.<br>Guarda tu código para hacer seguimiento.
+                </div>
+            `;
+        }
+    }
+
+    function mostrarError(msg) {
+        document.getElementById('detallesSection').innerHTML = `
+            <div class="error-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>${msg}</p>
+            </div>
+        `;
+    }
+
+    function copiarCodigo() {
+        if (!codigo) return;
+        navigator.clipboard.writeText(codigo).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
+            btn.style.background = 'rgba(107,203,119,0.2)';
+            btn.style.borderColor = 'rgba(107,203,119,0.35)';
+            btn.style.color = '#6bcb77';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-copy"></i> Copiar';
+                btn.style.background = '';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+            }, 2000);
+        });
+    }
+
+    // Iniciar
+    cargarPedido();
+</script>
+
+</body>
+</html>

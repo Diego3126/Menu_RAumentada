@@ -400,6 +400,33 @@ main {
     margin: 1rem 0;
 }
 
+/* Toast notifications */
+.toast-container {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    z-index: 2000;
+}
+.toast {
+    min-width: 220px;
+    max-width: 360px;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    color: white;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: #4caf50; }
+.toast.error   { background: #f44336; }
+.toast.info    { background: #2196f3; }
+
 .resumen-item {
     display: flex;
     justify-content: space-between;
@@ -701,6 +728,7 @@ main {
 @media (max-width: 768px) {
     .ingredientes-grid {
         grid-template-columns: 1fr;
+    }
 
     .back-btn {
         position: static;
@@ -786,32 +814,50 @@ main {
 
 .cart-icon {
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     color: white;
-    font-size: 1.5rem;
+    font-size: 1rem;
     text-decoration: none;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.6rem;
-    border-radius: 50%;
-    transition: all 0.2s;
+    background: linear-gradient(135deg, #ff8c42, #e5631a);
+    padding: 0.55rem 1.1rem 0.55rem 0.9rem;
+    border-radius: 50px;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 15px rgba(255, 140, 66, 0.4);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+
+.cart-icon::after {
+    content: 'Carrito';
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
 .cart-icon:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.05);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(255, 140, 66, 0.55);
+    background: linear-gradient(135deg, #ff9a55, #f0721f);
 }
 
 .cart-count {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ff8c42;
-    color: white;
-    font-size: 0.7rem;
-    font-weight: bold;
-    padding: 2px 6px;
+    top: -6px;
+    right: -6px;
+    background: white;
+    color: #e5631a;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 5px;
     border-radius: 50%;
     min-width: 18px;
-    text-align: center;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
 
 /* Estilos para el carrito */

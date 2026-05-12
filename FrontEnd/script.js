@@ -1,5 +1,7 @@
 // Configuración de la API
-const API_URL = 'http://localhost:3000/api';
+const API_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000/api'
+    : '/api';
 
 // Variables globales
 let allPlatos = [];           // Todos los platos desde la API
@@ -12,6 +14,61 @@ const dishesGrid = document.getElementById('dishesGrid');
 const arModal = document.getElementById('arModal');
 const closeArModalSpan = document.querySelector('.close-ar-modal');
 const arExperienceBtn = document.getElementById('arExperienceBtn');
+
+// ---------- Autenticación (token + role) ----------
+function getAuthToken() {
+    return localStorage.getItem('authToken');
+}
+
+function getAuthRole() {
+    return localStorage.getItem('authRole');
+}
+
+function initAuthUI() {
+    const loginLink = document.getElementById('loginLink');
+    const logoutLink = document.getElementById('logoutLink');
+    const adminLink = document.getElementById('adminLink');
+    const token = getAuthToken();
+    const role = getAuthRole();
+
+    if (!loginLink || !logoutLink || !adminLink) return;
+
+    if (token) {
+        loginLink.style.display = 'none';
+        logoutLink.style.display = 'inline-block';
+        if (role === 'ADMIN') {
+            adminLink.style.display = 'inline-block';
+        } else {
+            adminLink.style.display = 'none';
+        }
+    } else {
+        loginLink.style.display = 'inline-block';
+        logoutLink.style.display = 'none';
+        adminLink.style.display = 'none';
+    }
+
+    logoutLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authRole');
+        initAuthUI();
+        window.location.href = 'index.html';
+    });
+}
+
+async function fetchWithAuth(url, options = {}) {
+    const token = getAuthToken();
+    options.headers = options.headers || {};
+    if (token) options.headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(url, options);
+    if (res.status === 401 || res.status === 403) {
+        // Redirigir a login
+        window.location.href = 'login.html';
+        throw new Error('Unauthorized');
+    }
+    return res;
+}
 
 // ==================== FUNCIONES PARA CARGAR DATOS ====================
 
@@ -123,16 +180,55 @@ function renderDishes() {
                 <div class="dish-name">${plato.nombre}</div>
                 <div class="dish-description">${plato.descripcion || 'Delicioso plato'}</div>
                 <div class="dish-price">$${parseFloat(plato.precio).toFixed(2)}</div>
+                <div class="dish-actions" data-id="${plato.id}"></div>
             </div>
         `;
 
-        // Agregar click al card para abrir modal de AR o ir a personalización
+        // Añadir acciones administrativas si el usuario es ADMIN
+        const actionsEl = card.querySelector('.dish-actions');
+        if (getAuthRole && getAuthRole() === 'ADMIN') {
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Editar precio';
+            editBtn.className = 'btn-edit-price';
+            editBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const nuevo = prompt('Nuevo precio para ' + plato.nombre, plato.precio);
+                if (nuevo === null) return;
+                try {
+                    await fetchWithAuth(`${API_URL}/platos/${plato.id}/precio`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nuevoPrecio: parseFloat(nuevo) })
+                    });
+                    cargarPlatos();
+                } catch (err) {
+                    console.error('error update price', err);
+                    alert('Error actualizando precio');
+                }
+            });
+
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Eliminar';
+            delBtn.className = 'btn-delete';
+            delBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!confirm('Eliminar ' + plato.nombre + '?')) return;
+                try {
+                    await fetchWithAuth(`${API_URL}/platos/${plato.id}`, { method: 'DELETE' });
+                    cargarPlatos();
+                } catch (err) {
+                    console.error('delete error', err);
+                    alert('Error eliminando plato');
+                }
+            });
+
+            actionsEl.appendChild(editBtn);
+            actionsEl.appendChild(delBtn);
+        }
+
+        // Click en card: ir directo a personalizar el plato
         card.addEventListener('click', () => {
-            // Opción 1: Ir a personalizar (comentado)
-            // window.location.href = `pedido.html?id=${plato.id}`;
-            
-            // Opción 2: Abrir visor 3D en modal (usando GLB temporal)
-            openAR3DViewer(plato);
+            window.location.href = `pedido.html?id=${plato.id}`;
         });
 
         dishesGrid.appendChild(card);
@@ -144,24 +240,58 @@ function renderDishes() {
  */
 function openAR3DViewer(plato) {
     arModal.style.display = 'flex';
-    
-    // Determinar ruta del modelo
-    // Por defecto, busca en carpeta /models con el nombre del plato
-    // Si no existe, usa un placeholder
-    const modelPath = `/models/${sanitizeName(plato.nombre)}.glb` || '/models/default.glb';
-    
-    // Cargar modelo en el visor
-    if (viewer3D) {
-        viewer3D.loadModel(modelPath, {
-            dishId: plato.id,
-            nombre: plato.nombre,
-            descripcion: plato.descripcion,
-            precio: plato.precio,
-            categoria: plato.categoria,
-            ingredientes_base: plato.ingredientes_base
+
+    // Ruta del modelo — desde BD o fallback por nombre
+    const modelPath = plato.model_path
+        ? `/models/${plato.model_path}`
+        : `/models/${sanitizeName(plato.nombre)}.glb`;
+
+    // Nombre del plato en el header del modal
+    const dishNameEl = document.getElementById('dishNameAR');
+    if (dishNameEl) dishNameEl.textContent = plato.nombre;
+
+    // Asignar el modelo a model-viewer
+    const mv = document.getElementById('modelViewerAR');
+    const loading = document.getElementById('mvLoading');
+
+    if (mv) {
+        // Mostrar loading mientras carga
+        if (loading) loading.style.display = 'flex';
+
+        mv.src = modelPath;
+
+        // Ocultar loading cuando el modelo esté listo
+        mv.addEventListener('load', () => {
+            if (loading) loading.style.display = 'none';
+        }, { once: true });
+
+        // Si el modelo falla (no existe el .glb), ocultar loading igual
+        mv.addEventListener('error', () => {
+            if (loading) loading.style.display = 'none';
+            console.warn('Modelo no encontrado:', modelPath);
+        }, { once: true });
+
+        // Mostrar badge "RA disponible" en móviles que lo soporten
+        mv.addEventListener('ar-status', (e) => {
+            const badge = document.getElementById('arBadgeMobile');
+            if (badge && e.detail.status !== 'not-presenting') {
+                badge.style.display = 'inline-flex';
+            }
+        }, { once: true });
+    }
+
+    // Conectar botón "Personalizar y agregar al carrito"
+    const btnPersonalizar = document.getElementById('btnPersonalizarDesdeAR');
+    if (btnPersonalizar) {
+        const btnNuevo = btnPersonalizar.cloneNode(true);
+        btnPersonalizar.parentNode.replaceChild(btnNuevo, btnPersonalizar);
+        btnNuevo.addEventListener('click', () => {
+            arModal.style.display = 'none';
+            window.location.href = `pedido.html?id=${plato.id}`;
         });
-    } else {
-        console.warn('Visor 3D no inicializado aún');
+        // Restaurar hover handlers
+        btnNuevo.onmouseover = () => { btnNuevo.style.transform='translateY(-2px)'; btnNuevo.style.boxShadow='0 6px 22px rgba(255,140,66,0.55)'; };
+        btnNuevo.onmouseout  = () => { btnNuevo.style.transform='translateY(0)';    btnNuevo.style.boxShadow='0 4px 15px rgba(255,140,66,0.4)'; };
     }
 }
 
@@ -171,9 +301,19 @@ function openAR3DViewer(plato) {
 function sanitizeName(name) {
     return name
         .toLowerCase()
+        // Reemplazar tildes y caracteres especiales del español ANTES de eliminar símbolos
+        .replace(/[áàäâ]/g, 'a')
+        .replace(/[éèëê]/g, 'e')
+        .replace(/[íìïî]/g, 'i')
+        .replace(/[óòöô]/g, 'o')
+        .replace(/[úùüû]/g, 'u')
+        .replace(/ñ/g, 'n')
+        .replace(/ç/g, 'c')
+        // Eliminar el resto de caracteres especiales
         .replace(/[^\w\s-]/g, '')
         .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
+        .replace(/-+/g, '-')
+        .trim();
 }
 
 // ==================== FUNCIONES DE REALIDAD AUMENTADA ====================
@@ -210,6 +350,7 @@ window.onclick = (e) => {
 
 // Cargar todo al iniciar
 document.addEventListener('DOMContentLoaded', () => {
+    initAuthUI();
     cargarPlatos();
 });
 
@@ -240,6 +381,7 @@ async function actualizarContadorCarrito() {
 
 // Llamar al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
+    initAuthUI();
     actualizarContadorCarrito();
 });
 

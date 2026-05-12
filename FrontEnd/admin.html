@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin — Restaurante Delicias</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-image: none !important;
+            background-attachment: unset !important;
+            min-height: 100vh;
+            background: #0d0d0d;
+            font-family: 'DM Sans', sans-serif;
+            color: #f0ebe3;
+        }
+
+        nav {
+            background: rgba(13,13,13,0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: #ff8c42;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .nav-links { display: flex; gap: 0.5rem; }
+
+        .nav-link {
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            color: rgba(240,235,227,0.6);
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+
+        .nav-link:hover { background: rgba(255,140,66,0.12); color: #ff8c42; }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 0 2rem;
+            background: rgba(13,13,13,0.6);
+        }
+
+        .tab-btn {
+            padding: 0.85rem 1.4rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.88rem;
+            color: rgba(240,235,227,0.5);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover { color: rgba(240,235,227,0.8); }
+        .tab-btn.active { color: #ff8c42; border-bottom-color: #ff8c42; }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .page-header { margin-bottom: 2rem; }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .page-header p { color: rgba(240,235,227,0.5); font-size: 0.9rem; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; flex-shrink: 0;
+        }
+
+        .stat-icon.naranja { background: rgba(255,140,66,0.15); }
+        .stat-icon.verde   { background: rgba(76,175,80,0.15);  }
+        .stat-icon.azul    { background: rgba(64,156,255,0.15); }
+        .stat-icon.morado  { background: rgba(156,39,176,0.15); }
+
+        .stat-value { font-size: 1.6rem; font-weight: 600; line-height: 1; }
+        .stat-label { font-size: 0.8rem; color: rgba(240,235,227,0.5); margin-top: 0.2rem; }
+
+        .section-title {
+            font-size: 1rem; font-weight: 500;
+            margin-bottom: 1rem;
+            color: rgba(240,235,227,0.8);
+        }
+
+        .tabla-wrap {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead th {
+            padding: 0.9rem 1.2rem;
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(240,235,227,0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        tbody td {
+            padding: 0.9rem 1.2rem;
+            font-size: 0.88rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 0.25rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .estado-pendiente  { background: rgba(255,193,7,0.15);  color: #ffd54f; }
+        .estado-proceso    { background: rgba(33,150,243,0.15); color: #64b5f6; }
+        .estado-listo      { background: rgba(76,175,80,0.15);  color: #81c784; }
+        .estado-entregado  { background: rgba(158,158,158,0.15);color: #bdbdbd; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: rgba(240,235,227,0.3);
+        }
+
+        /* ======================== GESTIÓN DE PLATOS ======================== */
+        .card-section {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-section h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 1.2rem;
+            color: rgba(240,235,227,0.8);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .form-field label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(240,235,227,0.4);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-field input,
+        .form-field textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            color: #f0ebe3;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            resize: none;
+        }
+
+        .form-field input:focus,
+        .form-field textarea:focus {
+            border-color: #ff8c42;
+            box-shadow: 0 0 0 3px rgba(255,140,66,0.15);
+        }
+
+        .form-field input::placeholder,
+        .form-field textarea::placeholder { color: rgba(240,235,227,0.25); }
+
+        /* Preview de imagen */
+        .img-preview-wrap {
+            margin-top: 0.5rem;
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .img-preview-wrap img {
+            height: 60px;
+            width: 80px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            object-fit: cover;
+            background: rgba(255,255,255,0.04);
+        }
+        .img-preview-wrap span {
+            font-size: 0.75rem;
+            color: rgba(240,235,227,0.4);
+        }
+
+        /* Tags de ingredientes */
+        .tags-input-box {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 0.45rem 0.7rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            cursor: text;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            min-height: 44px;
+            align-items: center;
+        }
+        .tags-input-box:focus-within {
+            border-color: #ff8c42;
+            box-shadow: 0 0 0 3px rgba(255,140,66,0.15);
+        }
+        .tag {
+            background: rgba(255,140,66,0.18);
+            border: 1px solid rgba(255,140,66,0.3);
+            color: #ffa96a;
+            border-radius: 20px;
+            padding: 0.18rem 0.6rem;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+            animation: tagIn 0.15s ease;
+        }
+        @keyframes tagIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .tag-x {
+            cursor: pointer;
+            color: rgba(255,140,66,0.5);
+            font-size: 0.85rem;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+        .tag-x:hover { color: #ff8c42; }
+        .tags-input-box input {
+            background: none;
+            border: none;
+            outline: none;
+            color: #f0ebe3;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.88rem;
+            min-width: 140px;
+            flex: 1;
+            padding: 0.15rem 0.1rem;
+        }
+        .tag-hint {
+            font-size: 0.72rem;
+            color: rgba(240,235,227,0.28);
+            margin-top: 0.35rem;
+        }
+
+        .btn-crear {
+            background: linear-gradient(135deg, #ff8c42, #e67e22);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1.8rem;
+            color: white;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(255,140,66,0.25);
+            margin-top: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-crear:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,140,66,0.35); }
+        .btn-crear:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        .resultado-msg {
+            margin-top: 0.8rem;
+            font-size: 0.85rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+        .resultado-msg.exito { background: rgba(76,175,80,0.12); color: #81c784; border: 1px solid rgba(76,175,80,0.2); display: block; }
+        .resultado-msg.error { background: rgba(255,92,92,0.12); color: #ff8f8f; border: 1px solid rgba(255,92,92,0.2); display: block; }
+
+        /* Botones tabla */
+        .btn-eliminar {
+            background: rgba(255,92,92,0.12);
+            border: 1px solid rgba(255,92,92,0.2);
+            border-radius: 6px;
+            padding: 0.28rem 0.65rem;
+            color: #ff8f8f;
+            font-size: 0.78rem;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s;
+        }
+        .btn-eliminar:hover { background: rgba(255,92,92,0.22); }
+
+        .btn-editar-precio {
+            background: rgba(100,160,255,0.12);
+            border: 1px solid rgba(100,160,255,0.2);
+            border-radius: 6px;
+            padding: 0.28rem 0.65rem;
+            color: #64a0ff;
+            font-size: 0.78rem;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.2s;
+            margin-right: 0.35rem;
+        }
+        .btn-editar-precio:hover { background: rgba(100,160,255,0.22); }
+
+        /* Edición de precio inline */
+        .precio-cell { white-space: nowrap; }
+        .precio-display { display: inline-flex; align-items: center; gap: 0.4rem; }
+        .precio-edit-wrap {
+            display: none;
+            align-items: center;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+        .precio-edit-wrap input {
+            width: 95px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,140,66,0.4);
+            border-radius: 6px;
+            padding: 0.25rem 0.5rem;
+            color: #f0ebe3;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .precio-edit-wrap input:focus { border-color: #ff8c42; box-shadow: 0 0 0 2px rgba(255,140,66,0.15); }
+        .btn-guardar-precio, .btn-cancelar-precio {
+            padding: 0.25rem 0.55rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-family: 'DM Sans', sans-serif;
+            transition: background 0.15s;
+        }
+        .btn-guardar-precio  { background: rgba(76,175,80,0.2);    color: #81c784; border: 1px solid rgba(76,175,80,0.3) !important; }
+        .btn-guardar-precio:hover { background: rgba(76,175,80,0.32); }
+        .btn-cancelar-precio { background: rgba(255,255,255,0.06); color: rgba(240,235,227,0.5); border: 1px solid rgba(255,255,255,0.1) !important; }
+        .btn-cancelar-precio:hover { background: rgba(255,255,255,0.1); }
+
+        /* ── Upload imagen y modelo (compartido) ── */
+        .imagen-upload-area {
+            border: 2px dashed rgba(255,140,66,0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255,140,66,0.03);
+            position: relative;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+        .imagen-upload-area:hover,
+        .imagen-upload-area.drag-over {
+            border-color: rgba(255,140,66,0.7);
+            background: rgba(255,140,66,0.07);
+        }
+        .imagen-upload-area input[type="file"] {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .imagen-upload-area .upload-icon {
+            font-size: 1.5rem; color: rgba(255,140,66,0.5);
+        }
+        .imagen-upload-area .upload-text {
+            font-size: 0.82rem; color: rgba(240,235,227,0.4); line-height: 1.4;
+        }
+        /* Preview de imagen subida */
+        .img-preview-upload {
+            display: none;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.6rem;
+            border: 1px solid rgba(255,140,66,0.2);
+        }
+        .img-preview-upload img {
+            width: 100%;
+            max-height: 140px;
+            object-fit: cover;
+            display: block;
+        }
+        .img-preview-upload .quitar-imagen {
+            position: absolute;
+            top: 0.4rem; right: 0.4rem;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px; height: 24px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .img-preview-upload .quitar-imagen:hover { background: rgba(255,80,80,0.8); }
+
+        /* ── Upload modelo 3D ── */
+        .modelo-upload-area {
+            border: 2px dashed rgba(255,140,66,0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255,140,66,0.03);
+            position: relative;
+        }
+        .modelo-upload-area:hover,
+        .modelo-upload-area.drag-over {
+            border-color: rgba(255,140,66,0.7);
+            background: rgba(255,140,66,0.07);
+        }
+        .modelo-upload-area input[type="file"] {
+            position: absolute; inset: 0;
+            opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .modelo-upload-area .upload-icon {
+            font-size: 1.5rem; color: rgba(255,140,66,0.5); margin-bottom: 0.4rem;
+        }
+        .modelo-upload-area .upload-text {
+            font-size: 0.82rem; color: rgba(240,235,227,0.4); line-height: 1.4;
+        }
+        .modelo-preview {
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            margin-top: 0.6rem;
+            background: rgba(255,140,66,0.08);
+            border: 1px solid rgba(255,140,66,0.2);
+            border-radius: 8px;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.82rem;
+        }
+        .modelo-preview i { color: #ff8c42; }
+        .modelo-preview span { flex: 1; color: rgba(240,235,227,0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .modelo-preview .quitar-modelo {
+            cursor: pointer; color: rgba(240,235,227,0.3);
+            font-size: 1rem; transition: color 0.15s; flex-shrink: 0;
+        }
+        .modelo-preview .quitar-modelo:hover { color: #ff8f8f; }
+
+        /* Columna modelo en tabla de platos */
+        .modelo-badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            font-size: 0.75rem; padding: 0.2rem 0.55rem;
+            border-radius: 20px;
+        }
+        .modelo-badge.con-modelo {
+            background: rgba(255,140,66,0.12);
+            color: #ffa96a;
+            border: 1px solid rgba(255,140,66,0.2);
+        }
+        .modelo-badge.sin-modelo {
+            background: rgba(255,255,255,0.05);
+            color: rgba(240,235,227,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 0 1rem; }
+            .nav-links { display: none; }
+            .tabs { padding: 0 1rem; overflow-x: auto; }
+            .main { padding: 1.2rem 1rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .tabla-wrap { overflow-x: auto; }
+            table { min-width: 500px; }
+            .form-row, .form-row-2 { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-brand">🍽️ Admin Panel</div>
+    <div class="nav-links">
+        <a href="/" class="nav-link"><i class="fas fa-store"></i> Ver menú</a>
+        <a href="/cambiar-password" class="nav-link"><i class="fas fa-key"></i> Cambiar contraseña</a>
+    </div>
+    <div id="userInfo"></div>
+</nav>
+
+<div class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">
+        <i class="fas fa-chart-line"></i> Dashboard
+    </button>
+    <button class="tab-btn" data-tab="platos">
+        <i class="fas fa-utensils"></i> Gestión de platos
+    </button>
+</div>
+
+<main class="main">
+
+    <!-- TAB DASHBOARD -->
+    <div class="tab-panel active" id="tab-dashboard">
+        <div class="page-header">
+            <h1>Dashboard</h1>
+            <p id="saludo">Bienvenido al panel de administración</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon naranja">📋</div>
+                <div>
+                    <div class="stat-value" id="statPedidos">—</div>
+                    <div class="stat-label">Pedidos hoy</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon verde">⏳</div>
+                <div>
+                    <div class="stat-value" id="statPendientes">—</div>
+                    <div class="stat-label">Pendientes</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon azul">💰</div>
+                <div>
+                    <div class="stat-value" id="statTotal">—</div>
+                    <div class="stat-label">Total del día</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon morado">👤</div>
+                <div>
+                    <div class="stat-value" id="statUsuarios">—</div>
+                    <div class="stat-label">Usuarios</div>
+                </div>
+            </div>
+        </div>
+
+        <p class="section-title">Pedidos recientes</p>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaPedidos">
+                    <tr><td colspan="5" class="empty-state">Cargando pedidos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB PLATOS -->
+    <div class="tab-panel" id="tab-platos">
+        <div class="page-header">
+            <h1>Gestión de platos</h1>
+            <p>Agrega, edita o elimina platos del menú</p>
+        </div>
+
+        <!-- FORMULARIO CREAR PLATO -->
+        <div class="card-section">
+            <h3><i class="fas fa-plus-circle" style="color:#ff8c42"></i> Crear nuevo plato</h3>
+
+            <!-- Fila 1: nombre, precio, categoría -->
+            <div class="form-row">
+                <div class="form-field">
+                    <label>Nombre *</label>
+                    <input type="text" id="p_nombre" placeholder="Ej: Hamburguesa clásica">
+                </div>
+                <div class="form-field">
+                    <label>Precio *</label>
+                    <input type="number" id="p_precio" placeholder="18000" step="0.01" min="0">
+                </div>
+                <div class="form-field">
+                    <label>Categoría</label>
+                    <input type="text" id="p_categoria" placeholder="Ej: Hamburguesas">
+                </div>
+            </div>
+
+            <!-- Fila 2: descripción e imagen URL -->
+            <div class="form-row-2">
+                <div class="form-field">
+                    <label>Descripción</label>
+                    <textarea id="p_descripcion" rows="2" placeholder="Describe brevemente el plato..."></textarea>
+                </div>
+                <div class="form-field">
+                    <label>Imagen del plato <span style="color:rgba(240,235,227,0.3);font-size:0.7rem;">(JPG, PNG, WEBP)</span></label>
+                    <div class="imagen-upload-area" id="imagenUploadArea">
+                        <input type="file" id="p_imagen_file" accept=".jpg,.jpeg,.png,.webp,.avif">
+                        <div class="upload-icon"><i class="fas fa-image"></i></div>
+                        <div class="upload-text">
+                            Arrastra la imagen aquí<br>
+                            <span style="color:rgba(255,140,66,0.6);">o haz clic para seleccionar</span>
+                        </div>
+                    </div>
+                    <div class="img-preview-upload" id="imgPreviewUpload">
+                        <img id="imgPreviewFile" src="" alt="Vista previa">
+                        <button class="quitar-imagen" id="quitarImagen" type="button">×</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila 3: modelo 3D -->
+            <div class="form-row-2">
+                <div class="form-field">
+                    <label>Modelo 3D <span style="color:rgba(240,235,227,0.3);font-size:0.7rem;">(opcional · .glb)</span></label>
+                    <div class="modelo-upload-area" id="modeloUploadArea">
+                        <input type="file" id="p_modelo" accept=".glb,.gltf">
+                        <div class="upload-icon"><i class="fas fa-cube"></i></div>
+                        <div class="upload-text">
+                            Arrastra el archivo .glb aquí<br>
+                            <span style="color:rgba(255,140,66,0.6);">o haz clic para seleccionar</span>
+                        </div>
+                    </div>
+                    <div class="modelo-preview" id="modeloPreview">
+                        <i class="fas fa-cube"></i>
+                        <span id="modeloNombre">archivo.glb</span>
+                        <span class="quitar-modelo" id="quitarModelo">×</span>
+                    </div>
+                </div>
+                <div class="form-field" style="display:flex;align-items:center;padding-top:1.4rem;">
+                    <p style="font-size:0.78rem;color:rgba(240,235,227,0.3);line-height:1.6;">
+                        <i class="fas fa-circle-info" style="color:rgba(255,140,66,0.5);"></i>
+                        El modelo 3D se mostrará al cliente cuando use la función de
+                        <strong style="color:rgba(255,140,66,0.6);">Realidad Aumentada</strong>
+                        en el menú.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Fila 4: ingredientes base (tags) -->
+            <div class="form-field">
+                <label>Ingredientes base</label>
+                <div class="tags-input-box" id="tagsBox">
+                    <input type="text" id="tagInput" placeholder="Escribe un ingrediente y presiona Enter o coma...">
+                </div>
+                <p class="tag-hint"><i class="fas fa-circle-info" style="font-size:0.7rem"></i> Presiona Enter o , para agregar cada ingrediente</p>
+            </div>
+
+            <button class="btn-crear" id="btnCrearPlato">
+                <i class="fas fa-plus"></i> Crear plato
+            </button>
+            <div class="resultado-msg" id="resultadoCrear"></div>
+        </div>
+
+        <!-- TABLA DE PLATOS -->
+        <div class="card-section">
+            <h3><i class="fas fa-list" style="color:#ff8c42"></i> Platos del menú</h3>
+            <div class="tabla-wrap" style="margin-bottom:0">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Modelo 3D</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaPlatos">
+                        <tr><td colspan="4" class="empty-state">Cargando platos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script src="auth-helper.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const usuario = requireRol('admin');
+        if (!usuario) return;
+
+        renderUserInfo(usuario);
+        document.getElementById('saludo').textContent =
+            `Hola, ${usuario.nombre}. Aquí tienes el resumen del día.`;
+
+        const token = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        // ── Tabs ──────────────────────────────────────────────
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+            });
+        });
+
+        // ── Dashboard ─────────────────────────────────────────
+        async function cargarDashboard() {
+            try {
+                const resPedidos = await fetch(`${API_URL}/pedidos`, { headers });
+                if (resPedidos.ok) {
+                    const pedidos = await resPedidos.json();
+                    const hoy = new Date().toDateString();
+                    const pedidosHoy = pedidos.filter(p => new Date(p.created_at).toDateString() === hoy);
+                    const pendientes = pedidos.filter(p => p.estado === 'pendiente');
+                    const totalDia   = pedidosHoy.reduce((s, p) => s + parseFloat(p.total || 0), 0);
+
+                    document.getElementById('statPedidos').textContent   = pedidosHoy.length;
+                    document.getElementById('statPendientes').textContent = pendientes.length;
+                    document.getElementById('statTotal').textContent      = `$${totalDia.toFixed(0)}`;
+
+                    const tbody = document.getElementById('tablaPedidos');
+                    tbody.innerHTML = pedidos.length === 0
+                        ? `<tr><td colspan="5" class="empty-state">Sin pedidos aún</td></tr>`
+                        : pedidos.slice(0, 10).map(p => `
+                            <tr>
+                                <td><strong>${p.codigo_pedido}</strong></td>
+                                <td>${p.nombre_cliente}</td>
+                                <td>$${parseFloat(p.total || 0).toFixed(2)}</td>
+                                <td><span class="estado-badge estado-${p.estado}">${p.estado}</span></td>
+                                <td>${new Date(p.created_at).toLocaleString('es-CO')}</td>
+                            </tr>`).join('');
+                }
+
+                const resUsuarios = await fetch(`${API_URL}/usuarios`, { headers });
+                if (resUsuarios.ok) {
+                    const usuarios = await resUsuarios.json();
+                    document.getElementById('statUsuarios').textContent = usuarios.length;
+                }
+            } catch (err) {
+                console.error('Error cargando dashboard:', err);
+            }
+        }
+
+        // ── Platos ────────────────────────────────────────────
+        async function cargarPlatos() {
+            const tbody = document.getElementById('listaPlatos');
+            try {
+                const res = await fetch(`${API_URL}/platos`);
+                const platos = await res.json();
+
+                if (platos.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No hay platos aún</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = platos.map(p => `
+                    <tr id="fila-${p.id}">
+                        <td><strong>${p.nombre}</strong></td>
+                        <td>${p.categoria || '—'}</td>
+                        <td class="precio-cell">
+                            <span class="precio-display" id="display-${p.id}">
+                                $${parseFloat(p.precio).toFixed(2)}
+                            </span>
+                            <span class="precio-edit-wrap" id="edit-${p.id}">
+                                <input type="number" step="0.01" min="0"
+                                    value="${parseFloat(p.precio).toFixed(2)}"
+                                    id="input-precio-${p.id}">
+                                <button class="btn-guardar-precio" onclick="guardarPrecio(${p.id})">
+                                    <i class="fas fa-check"></i> Guardar
+                                </button>
+                                <button class="btn-cancelar-precio" onclick="cancelarEditarPrecio(${p.id})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </span>
+                        </td>
+                        <td style="min-width:140px;vertical-align:top;padding-top:0.8rem;">
+                            ${p.imagen_url
+                                ? `<img src="${p.imagen_url}" style="width:52px;height:38px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.1);display:block;margin-bottom:0.25rem;" onerror="this.style.display='none'">`
+                                : `<span style="font-size:0.7rem;color:rgba(240,235,227,0.3);display:block;margin-bottom:0.25rem;">Sin imagen</span>`}
+                            <label style="cursor:pointer;display:inline-block;margin-bottom:0.5rem;">
+                                <input type="file" accept=".jpg,.jpeg,.png,.webp" style="display:none" onchange="subirImagenAPlato(${p.id}, this)">
+                                <span style="font-size:0.7rem;color:rgba(255,140,66,0.7);text-decoration:underline;text-underline-offset:2px;">
+                                    ${p.imagen_url ? 'Cambiar img' : 'Subir img'}
+                                </span>
+                            </label><br>
+                            ${p.model_path
+                                ? `<span class="modelo-badge con-modelo" style="font-size:0.68rem;"><i class="fas fa-cube"></i> 3D</span>`
+                                : `<span class="modelo-badge sin-modelo" style="font-size:0.68rem;"><i class="fas fa-cube"></i> Sin 3D</span>`}
+                            <label style="cursor:pointer;display:inline-block;margin-top:0.25rem;">
+                                <input type="file" accept=".glb,.gltf" style="display:none" onchange="subirModeloAPlato(${p.id}, this)">
+                                <span style="font-size:0.7rem;color:rgba(255,140,66,0.7);text-decoration:underline;text-underline-offset:2px;">
+                                    ${p.model_path ? 'Cambiar .glb' : 'Subir .glb'}
+                                </span>
+                            </label>
+                        </td>
+                        <td>
+                            <button class="btn-editar-precio" onclick="activarEditarPrecio(${p.id})">
+                                <i class="fas fa-pen"></i> Precio
+                            </button>
+                            <button class="btn-eliminar" data-id="${p.id}">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>`).join('');
+
+                tbody.querySelectorAll('.btn-eliminar').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (!confirm('¿Eliminar este plato del menú?')) return;
+                        const res = await fetch(`${API_URL}/platos/${btn.dataset.id}`, { method: 'DELETE', headers });
+                        if (res.ok) cargarPlatos();
+                        else mostrarResultado('Error al eliminar el plato', 'error');
+                    });
+                });
+
+            } catch {
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Error al cargar platos</td></tr>`;
+            }
+        }
+
+        // ── Editar precio inline ───────────────────────────────
+        window.activarEditarPrecio = (id) => {
+            document.getElementById(`display-${id}`).style.display = 'none';
+            const editWrap = document.getElementById(`edit-${id}`);
+            editWrap.style.display = 'inline-flex';
+            document.getElementById(`input-precio-${id}`).focus();
+        };
+
+        window.cancelarEditarPrecio = (id) => {
+            document.getElementById(`display-${id}`).style.display = 'inline-flex';
+            document.getElementById(`edit-${id}`).style.display = 'none';
+        };
+
+        window.guardarPrecio = async (id) => {
+            const nuevoPrecio = parseFloat(document.getElementById(`input-precio-${id}`).value);
+            if (isNaN(nuevoPrecio) || nuevoPrecio <= 0) {
+                alert('Ingresa un precio válido mayor a 0.');
+                return;
+            }
+
+            const btn = document.querySelector(`#edit-${id} .btn-guardar-precio`);
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+
+            try {
+                const res = await fetch(`${API_URL}/platos/${id}/precio`, {
+                    method: 'PUT',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nuevoPrecio })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    // Actualizar el display sin recargar toda la tabla
+                    document.getElementById(`display-${id}`).textContent =
+                        `$${parseFloat(data.precio).toFixed(2)}`;
+                    cancelarEditarPrecio(id);
+                    // Feedback visual breve en la celda
+                    const cell = document.getElementById(`display-${id}`);
+                    cell.style.color = '#81c784';
+                    setTimeout(() => { cell.style.color = ''; }, 1500);
+                } else {
+                    const err = await res.json();
+                    alert(err.error || 'No se pudo actualizar el precio.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Guardar';
+                }
+            } catch {
+                alert('Error de conexión al actualizar el precio.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Guardar';
+            }
+        };
+
+        // ── Feedback formulario ────────────────────────────────
+        function mostrarResultado(msg, tipo) {
+            const el = document.getElementById('resultadoCrear');
+            el.textContent = msg;
+            el.className = `resultado-msg ${tipo}`;
+            setTimeout(() => { el.className = 'resultado-msg'; }, 4000);
+        }
+
+        // ── Upload y preview de imagen ─────────────────────────
+        let imagenArchivo     = null;
+        let imagenUrlSubida   = '';   // URL que devuelve el backend tras subir
+
+        const imagenArea    = document.getElementById('imagenUploadArea');
+        const imagenInput   = document.getElementById('p_imagen_file');
+        const imgPrevUpload = document.getElementById('imgPreviewUpload');
+        const imgPrevFile   = document.getElementById('imgPreviewFile');
+        const quitarImagen  = document.getElementById('quitarImagen');
+
+        function mostrarImagenPreview(file) {
+            imagenArchivo   = file;
+            imagenUrlSubida = '';
+            const reader = new FileReader();
+            reader.onload = e => {
+                imgPrevFile.src          = e.target.result;
+                imgPrevUpload.style.display = 'block';
+                imagenArea.querySelector('.upload-icon').style.color = 'rgba(255,140,66,0.8)';
+                imagenArea.querySelector('.upload-text').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function limpiarImagen() {
+            imagenArchivo   = null;
+            imagenUrlSubida = '';
+            imagenInput.value = '';
+            imgPrevUpload.style.display = 'none';
+            imgPrevFile.src = '';
+            imagenArea.querySelector('.upload-icon').style.color = 'rgba(255,140,66,0.5)';
+            imagenArea.querySelector('.upload-text').style.display = '';
+        }
+
+        imagenInput.addEventListener('change', () => {
+            if (imagenInput.files[0]) mostrarImagenPreview(imagenInput.files[0]);
+        });
+
+        quitarImagen.addEventListener('click', limpiarImagen);
+
+        // Drag & drop para imagen
+        imagenArea.addEventListener('dragover', e => { e.preventDefault(); imagenArea.classList.add('drag-over'); });
+        imagenArea.addEventListener('dragleave', () => imagenArea.classList.remove('drag-over'));
+        imagenArea.addEventListener('drop', e => {
+            e.preventDefault();
+            imagenArea.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            const extsPermitidas = ['.jpg','.jpeg','.png','.webp','.avif'];
+            const ext = file ? '.' + file.name.split('.').pop().toLowerCase() : '';
+            if (file && extsPermitidas.includes(ext)) {
+                mostrarImagenPreview(file);
+            } else if (file) {
+                mostrarResultado('Solo se aceptan imágenes JPG, PNG, WEBP o AVIF', 'error');
+            }
+        });
+
+        // ── Sistema de tags (ingredientes) ────────────────────
+        const tags = [];
+        const tagsBox  = document.getElementById('tagsBox');
+        const tagInput = document.getElementById('tagInput');
+
+        function renderTags() {
+            // Remover tags existentes del DOM (no el input)
+            tagsBox.querySelectorAll('.tag').forEach(t => t.remove());
+            tags.forEach((nombre, i) => {
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.innerHTML = `${nombre}<span class="tag-x" data-i="${i}">×</span>`;
+                tagsBox.insertBefore(tag, tagInput);
+            });
+            tagsBox.querySelectorAll('.tag-x').forEach(x => {
+                x.addEventListener('click', () => {
+                    tags.splice(parseInt(x.dataset.i), 1);
+                    renderTags();
+                });
+            });
+        }
+
+        function agregarTag(valor) {
+            const limpio = valor.trim().replace(/,+$/, '').trim();
+            if (limpio && !tags.includes(limpio)) {
+                tags.push(limpio);
+                renderTags();
+            }
+            tagInput.value = '';
+        }
+
+        tagInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                agregarTag(tagInput.value);
+            } else if (e.key === 'Backspace' && tagInput.value === '' && tags.length > 0) {
+                tags.pop();
+                renderTags();
+            }
+        });
+
+        tagInput.addEventListener('blur', () => {
+            if (tagInput.value.trim()) agregarTag(tagInput.value);
+        });
+
+        // Clic en el box → enfocar input
+        tagsBox.addEventListener('click', () => tagInput.focus());
+
+        // ── Drag & drop / preview del modelo 3D ───────────────
+        let modeloArchivo = null;
+
+        const modeloArea    = document.getElementById('modeloUploadArea');
+        const modeloInput   = document.getElementById('p_modelo');
+        const modeloPrev    = document.getElementById('modeloPreview');
+        const modeloNombre  = document.getElementById('modeloNombre');
+        const quitarModelo  = document.getElementById('quitarModelo');
+
+        function mostrarModeloPreview(file) {
+            modeloArchivo = file;
+            modeloNombre.textContent = file.name;
+            modeloPrev.style.display = 'flex';
+            modeloArea.querySelector('.upload-icon').style.color = 'rgba(255,140,66,0.8)';
+        }
+
+        function limpiarModelo() {
+            modeloArchivo = null;
+            modeloInput.value = '';
+            modeloPrev.style.display = 'none';
+            modeloArea.querySelector('.upload-icon').style.color = 'rgba(255,140,66,0.5)';
+        }
+
+        modeloInput.addEventListener('change', () => {
+            if (modeloInput.files[0]) mostrarModeloPreview(modeloInput.files[0]);
+        });
+
+        quitarModelo.addEventListener('click', limpiarModelo);
+
+        // Drag & drop visual
+        modeloArea.addEventListener('dragover', e => { e.preventDefault(); modeloArea.classList.add('drag-over'); });
+        modeloArea.addEventListener('dragleave', () => modeloArea.classList.remove('drag-over'));
+        modeloArea.addEventListener('drop', e => {
+            e.preventDefault();
+            modeloArea.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && (file.name.endsWith('.glb') || file.name.endsWith('.gltf'))) {
+                mostrarModeloPreview(file);
+            } else if (file) {
+                mostrarResultado('Solo se aceptan archivos .glb o .gltf', 'error');
+            }
+        });
+
+        // ── Subir imagen a un plato existente desde la tabla ──
+        window.subirImagenAPlato = async (platoId, inputEl) => {
+            const file = inputEl.files[0];
+            if (!file) return;
+
+            const fd = new FormData();
+            fd.append('imagen', file);
+            fd.append('plato_id', platoId);
+
+            try {
+                const res = await fetch(`${API_URL}/platos/upload-image`, {
+                    method: 'POST',
+                    headers,
+                    body: fd
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    mostrarResultado(`✅ ${data.mensaje}`, 'exito');
+                    cargarPlatos();
+                } else {
+                    mostrarResultado(data.error || 'Error al subir la imagen.', 'error');
+                }
+            } catch {
+                mostrarResultado('Error de conexión al subir la imagen.', 'error');
+            }
+        };
+
+        // ── Subir modelo a un plato existente desde la tabla ──
+        window.subirModeloAPlato = async (platoId, inputEl) => {
+            const file = inputEl.files[0];
+            if (!file) return;
+
+            const fd = new FormData();
+            fd.append('modelo', file);
+            fd.append('plato_id', platoId);
+
+            try {
+                const res = await fetch(`${API_URL}/platos/upload-model`, {
+                    method: 'POST',
+                    headers,   // sin Content-Type: multer lo maneja
+                    body: fd
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    mostrarResultado(`✅ ${data.mensaje}`, 'exito');
+                    cargarPlatos();
+                } else {
+                    mostrarResultado(data.error || 'Error al subir el modelo.', 'error');
+                }
+            } catch {
+                mostrarResultado('Error de conexión al subir el modelo.', 'error');
+            }
+        };
+
+        // ── Crear plato (con modelo 3D opcional) ──────────────
+        document.getElementById('btnCrearPlato').addEventListener('click', async () => {
+            const nombre      = document.getElementById('p_nombre').value.trim();
+            const precio      = parseFloat(document.getElementById('p_precio').value);
+            const categoria   = document.getElementById('p_categoria').value.trim();
+            const descripcion = document.getElementById('p_descripcion').value.trim();
+            const imagen_url  = document.getElementById('p_imagen').value.trim();
+
+            if (tagInput.value.trim()) agregarTag(tagInput.value);
+
+            if (!nombre)               { mostrarResultado('El nombre es obligatorio.', 'error'); return; }
+            if (!precio || precio <= 0){ mostrarResultado('Ingresa un precio válido.', 'error'); return; }
+
+            const btn = document.getElementById('btnCrearPlato');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Creando...';
+
+            try {
+                // Paso 1: si hay imagen, subirla primero para obtener la URL
+                let imagen_url = '';
+                if (imagenArchivo) {
+                    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Subiendo imagen...';
+                    const fdImg = new FormData();
+                    fdImg.append('imagen', imagenArchivo);
+                    const resImg = await fetch(`${API_URL}/platos/upload-image`, {
+                        method: 'POST',
+                        headers,
+                        body: fdImg
+                    });
+                    const dataImg = await resImg.json();
+                    if (!resImg.ok) {
+                        mostrarResultado(dataImg.error || 'Error al subir la imagen.', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-plus"></i> Crear plato';
+                        return;
+                    }
+                    imagen_url = dataImg.imagen_url;
+                }
+
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Creando...';
+
+                // Paso 2: crear el plato con la URL ya resuelta
+                const res = await fetch(`${API_URL}/platos`, {
+                    method: 'POST',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, precio, categoria, descripcion, imagen_url, ingredientes: [...tags] })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    mostrarResultado(err.error || 'Error al crear el plato.', 'error');
+                    return;
+                }
+
+                const data = await res.json();
+
+                // Paso 2: si tiene modelo, subirlo y asignarlo
+                if (modeloArchivo) {
+                    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Subiendo modelo...';
+                    const fd = new FormData();
+                    fd.append('modelo', modeloArchivo);
+                    fd.append('plato_id', data.id);
+
+                    const resModelo = await fetch(`${API_URL}/platos/upload-model`, {
+                        method: 'POST',
+                        headers,
+                        body: fd
+                    });
+
+                    const dataModelo = await resModelo.json();
+                    if (!resModelo.ok) {
+                        // El plato se creó pero el modelo falló — avisar sin error fatal
+                        mostrarResultado(
+                            `⚠️ Plato "${data.nombre}" creado, pero el modelo no se pudo subir: ${dataModelo.error}`,
+                            'error'
+                        );
+                        cargarPlatos();
+                        return;
+                    }
+                }
+
+                const ingMsg    = tags.length > 0 ? ` con ${tags.length} ingrediente(s)` : '';
+                const modeloMsg = modeloArchivo   ? ' y modelo 3D' : '';
+                mostrarResultado(`✅ Plato "${data.nombre}" creado${ingMsg}${modeloMsg}.`, 'exito');
+
+                // Limpiar formulario completo
+                ['p_nombre','p_precio','p_categoria','p_descripcion','p_imagen'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                document.getElementById('imgPreviewWrap').style.display = 'none';
+                tags.length = 0;
+                renderTags();
+                limpiarModelo();
+                cargarPlatos();
+
+            } catch {
+                mostrarResultado('Error de conexión.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus"></i> Crear plato';
+            }
+        });
+
+        cargarDashboard();
+        cargarPlatos();
+    });
+</script>
+
+</body>
+</html>
