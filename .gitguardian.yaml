@@ -1,0 +1,7 @@
+version: 2
+
+paths-ignore:
+  - node_modules/          
+  - dist/                  
+  - build/                 
+  - coverage/              
