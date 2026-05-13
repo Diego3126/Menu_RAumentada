@@ -12,7 +12,7 @@
 const BACKEND_URL = window.location.hostname === 'localhost' || 
                     window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000'
-    : 'https://RAILWAY_BACKEND_URL';  // ← reemplazar con tu URL de Railway
+    : 'https://menuraumentada-production.up.railway.app';
 
 const API_URL = `${BACKEND_URL}/api`;
 
