@@ -1,5 +1,5 @@
 // Login helper for FrontEnd
-const ADMIN_LOGIN_URL = 'http://localhost:8080/api/platos/login';
+const ADMIN_LOGIN_URL = `${window.API_URL || '/api'}/platos/login`;
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('loginForm');

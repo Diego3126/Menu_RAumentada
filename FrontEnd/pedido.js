@@ -1,7 +1,7 @@
 // Configuración
 const API_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:3000/api'
-    : '/api';
+    : window.API_URL || '/api';
 
 console.log('🚀 Iniciando pedido.js');
 console.log('🌐 API_URL:', API_URL);
