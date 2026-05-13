@@ -31,6 +31,10 @@ class Viewer3D {
      * Inicializa Three.js
      */
     init() {
+        // Proteger contra páginas que no tienen el visor 3D
+        if (!this.containerElement || !this.canvasElement) {
+            return;
+        }
         const width = this.containerElement.clientWidth;
         const height = this.containerElement.clientHeight;
 
@@ -176,6 +180,7 @@ class Viewer3D {
      * Configura event listeners de controles
      */
     setupEventListeners() {
+        if (!this.containerElement) return;
         // Slider de escala
         this.scaleSlider.addEventListener('input', (e) => {
             this.scale = parseFloat(e.target.value);

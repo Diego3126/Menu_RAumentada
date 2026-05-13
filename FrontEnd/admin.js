@@ -1,7 +1,8 @@
 // Admin panel JS - requires ADMIN role
-const API_URL = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000/api'
-    : window.API_URL || '/api';
+// API_URL viene de config.js (cargado antes en el HTML)
+// API_URL viene de config.js — no redeclarar
+// eslint-disable-next-line no-unused-vars
+var API_URL = window.API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api');
 
 function getAuthToken() { return localStorage.getItem('authToken'); }
 function getAuthRole() { return localStorage.getItem('authRole'); }
