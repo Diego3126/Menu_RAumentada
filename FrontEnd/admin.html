@@ -855,7 +855,7 @@
                         </td>
                         <td style="min-width:140px;vertical-align:top;padding-top:0.8rem;">
                             ${p.imagen_url
-                                ? `<img src="${p.imagen_url}" style="width:52px;height:38px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.1);display:block;margin-bottom:0.25rem;" onerror="this.style.display='none'">`
+                                ? `<img src="${p.imagen_url && p.imagen_url.startsWith('http') ? p.imagen_url : (window.BACKEND_URL || '') + p.imagen_url}" style="width:52px;height:38px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.1);display:block;margin-bottom:0.25rem;" onerror="this.style.display='none'">`
                                 : `<span style="font-size:0.7rem;color:rgba(240,235,227,0.3);display:block;margin-bottom:0.25rem;">Sin imagen</span>`}
                             <label style="cursor:pointer;display:inline-block;margin-bottom:0.5rem;">
                                 <input type="file" accept=".jpg,.jpeg,.png,.webp" style="display:none" onchange="subirImagenAPlato(${p.id}, this)">

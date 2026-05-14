@@ -211,8 +211,11 @@ router.post('/upload-image', requireAdmin, uploadImagen.single('imagen'), async 
         return res.status(400).json({ error: 'No se recibió ninguna imagen válida (JPG, PNG, WEBP, AVIF)' });
     }
 
-    const imagen_url = `/images/${req.file.filename}`;
-    const plato_id   = req.body.plato_id ? parseInt(req.body.plato_id) : null;
+    // Construir URL completa para que funcione desde Netlify
+    const protocol   = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host        = req.headers['x-forwarded-host'] || req.headers.host;
+    const imagen_url  = `${protocol}://${host}/images/${req.file.filename}`;
+    const plato_id    = req.body.plato_id ? parseInt(req.body.plato_id) : null;
 
     try {
         if (plato_id) {
