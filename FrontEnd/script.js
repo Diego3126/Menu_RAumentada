@@ -1,5 +1,12 @@
 // Variables globales
-let allPlatos = [];           // Todos los platos desde la API
+let allPlatos = [];
+
+// Resuelve URLs relativas de imágenes/modelos usando BACKEND_URL
+function resolverUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;  // ya es absoluta
+    return `${window.BACKEND_URL || ''}${url}`;
+}           // Todos los platos desde la API
 let categories = [];          // Categorías únicas
 let currentCategory = "Todas";
 
@@ -167,7 +174,7 @@ function renderDishes() {
         card.classList.add('dish-card');
 
         // Usar imagen por defecto si no hay imagen_url
-        const imagenUrl = plato.imagen_url || 'https://placehold.co/400x250/ff8c42/white?text=No+Image';
+        const imagenUrl = resolverUrl(plato.imagen_url) || 'https://placehold.co/400x250/ff8c42/white?text=No+Image';
 
         card.innerHTML = `
             <div class="dish-img" style="background-image: url('${imagenUrl}');"></div>
