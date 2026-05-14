@@ -224,9 +224,10 @@
                     .replace(/[úùüû]/g,'u').replace(/ñ/g,'n')
                     .replace(/[^\w\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-');
 
+                const backendBase = window.BACKEND_URL || '';
                 const src = plato.model_path
-                    ? `/models/${plato.model_path}`
-                    : `/models/${sanitizar(nombre)}.glb`;
+                    ? `${backendBase}/models/${plato.model_path}`
+                    : `${backendBase}/models/${sanitizar(nombre)}.glb`;
 
                 const mv = document.getElementById('mvPedido');
                 if (mv) mv.src = src;
@@ -239,7 +240,7 @@
                     .replace(/[úùüû]/g,'u').replace(/ñ/g,'n')
                     .replace(/[^\w\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-');
                 const mv = document.getElementById('mvPedido');
-                if (mv) mv.src = `/models/${sanitizar(nombre)}.glb`;
+                if (mv) mv.src = `${window.BACKEND_URL || ''}/models/${sanitizar(nombre)}.glb`;
             });
     });
 

@@ -236,10 +236,12 @@ function renderDishes() {
 function openAR3DViewer(plato) {
     arModal.style.display = 'flex';
 
-    // Ruta del modelo — desde BD o fallback por nombre
+    // En producción los modelos están en Railway (backend), no en Netlify
+    // BACKEND_URL viene de config.js y apunta a la URL correcta según el entorno
+    const backendBase = window.BACKEND_URL || '';
     const modelPath = plato.model_path
-        ? `/models/${plato.model_path}`
-        : `/models/${sanitizeName(plato.nombre)}.glb`;
+        ? `${backendBase}/models/${plato.model_path}`
+        : `${backendBase}/models/${sanitizeName(plato.nombre)}.glb`;
 
     // Nombre del plato en el header del modal
     const dishNameEl = document.getElementById('dishNameAR');
