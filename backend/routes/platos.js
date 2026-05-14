@@ -16,7 +16,7 @@ function sanitizarNombreArchivo(original, ext) {
 // ── Multer para modelos 3D (.glb/.gltf) ──────────────────────
 const storageModelos = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '../../uploads/models'));
+        cb(null, path.join(__dirname, '../uploads/models'));
     },
     filename: (req, file, cb) => {
         // Guardar con nombre limpio: timestamp + nombre original sanitizado
@@ -42,7 +42,7 @@ const upload = multer({
 // ── Multer para imágenes de platos ────────────────────────────
 const storageImagenes = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '../../uploads/images'));
+        cb(null, path.join(__dirname, '../uploads/images'));
     },
     filename: (req, file, cb) => {
         const ext  = path.extname(file.originalname).toLowerCase();
