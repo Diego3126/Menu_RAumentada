@@ -1165,7 +1165,9 @@
             const precio      = parseFloat(document.getElementById('p_precio').value);
             const categoria   = document.getElementById('p_categoria').value.trim();
             const descripcion = document.getElementById('p_descripcion').value.trim();
-            const imagen_url  = document.getElementById('p_imagen').value.trim();
+            // imagen_url viene del upload — se sube antes de crear el plato
+            // El campo p_imagen ya no existe, se usa el área de drag & drop
+            const imagen_url  = '';  // se sobreescribe si se sube imagen
 
             if (tagInput.value.trim()) agregarTag(tagInput.value);
 
@@ -1245,10 +1247,10 @@
                 mostrarResultado(`✅ Plato "${data.nombre}" creado${ingMsg}${modeloMsg}.`, 'exito');
 
                 // Limpiar formulario completo
-                ['p_nombre','p_precio','p_categoria','p_descripcion','p_imagen'].forEach(id => {
+                ['p_nombre','p_precio','p_categoria','p_descripcion'].forEach(id => {
                     document.getElementById(id).value = '';
                 });
-                document.getElementById('imgPreviewWrap').style.display = 'none';
+// imgPreviewWrap ya no existe — se usa img-preview-upload
                 tags.length = 0;
                 renderTags();
                 limpiarModelo();
