@@ -36,7 +36,7 @@ const upload = multer({
         if (ext === '.glb' || ext === '.gltf') cb(null, true);
         else cb(new Error('Solo se permiten archivos .glb o .gltf'));
     },
-    limits: { fileSize: 50 * 1024 * 1024 }
+    limits: { fileSize: 200 * 1024 * 1024 }  // máx 200 MB
 });
 
 // ── Multer para imágenes de platos ────────────────────────────
@@ -60,7 +60,7 @@ const uploadImagen = multer({
         if (permitidos.includes(ext)) cb(null, true);
         else cb(new Error('Solo se permiten imágenes JPG, PNG, WEBP o AVIF'));
     },
-    limits: { fileSize: 10 * 1024 * 1024 }  // máx 10 MB
+    limits: { fileSize: 10 * 1024 * 1024 }   // máx 10 MB
 });
 
 // Obtener todos los platos (público)
@@ -206,7 +206,15 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 });
 
 // POST /upload-image — subir imagen de plato y opcionalmente asignarla
-router.post('/upload-image', requireAdmin, uploadImagen.single('imagen'), async (req, res) => {
+router.post('/upload-image', requireAdmin, (req, res, next) => {
+    uploadImagen.single('imagen')(req, res, (err) => {
+        if (err && err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'La imagen supera el límite de 10 MB.' });
+        }
+        if (err) return res.status(400).json({ error: err.message });
+        next();
+    });
+}, async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No se recibió ninguna imagen válida (JPG, PNG, WEBP, AVIF)' });
     }
@@ -247,7 +255,15 @@ router.post('/upload-image', requireAdmin, uploadImagen.single('imagen'), async 
 });
 
 // POST /upload-model — subir archivo .glb y opcionalmente asignarlo a un plato
-router.post('/upload-model', requireAdmin, upload.single('modelo'), async (req, res) => {
+router.post('/upload-model', requireAdmin, (req, res, next) => {
+    upload.single('modelo')(req, res, (err) => {
+        if (err && err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'El modelo supera el límite de 200 MB.' });
+        }
+        if (err) return res.status(400).json({ error: err.message });
+        next();
+    });
+}, async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No se recibió ningún archivo .glb o .gltf' });
     }
