@@ -676,7 +676,7 @@
                     <textarea id="p_descripcion" rows="2" placeholder="Describe brevemente el plato..."></textarea>
                 </div>
                 <div class="form-field">
-                    <label>Imagen del plato <span style="color:rgba(240,235,227,0.3);font-size:0.7rem;">(JPG, PNG, WEBP)</span></label>
+                    <label>Imagen del plato <span style="color:rgba(240,235,227,0.3);font-size:0.7rem;">(JPG, PNG, WEBP · máx 10 MB)</span></label>
                     <div class="imagen-upload-area" id="imagenUploadArea">
                         <input type="file" id="p_imagen_file" accept=".jpg,.jpeg,.png,.webp,.avif">
                         <div class="upload-icon"><i class="fas fa-image"></i></div>
@@ -695,7 +695,7 @@
             <!-- Fila 3: modelo 3D -->
             <div class="form-row-2">
                 <div class="form-field">
-                    <label>Modelo 3D <span style="color:rgba(240,235,227,0.3);font-size:0.7rem;">(opcional · .glb)</span></label>
+                    <label>Modelo 3D <span style="color:rgba(240,235,227,0.3);font-size:0.7rem;">(opcional · .glb · máx 200 MB)</span></label>
                     <div class="modelo-upload-area" id="modeloUploadArea">
                         <input type="file" id="p_modelo" accept=".glb,.gltf">
                         <div class="upload-icon"><i class="fas fa-cube"></i></div>
@@ -994,7 +994,14 @@
         }
 
         imagenInput.addEventListener('change', () => {
-            if (imagenInput.files[0]) mostrarImagenPreview(imagenInput.files[0]);
+            const file = imagenInput.files[0];
+            if (!file) return;
+            if (file.size > 10 * 1024 * 1024) {
+                mostrarResultado('La imagen supera el límite de 10 MB. Elige una imagen más pequeña.', 'error');
+                imagenInput.value = '';
+                return;
+            }
+            mostrarImagenPreview(file);
         });
 
         quitarImagen.addEventListener('click', limpiarImagen);
@@ -1087,7 +1094,14 @@
         }
 
         modeloInput.addEventListener('change', () => {
-            if (modeloInput.files[0]) mostrarModeloPreview(modeloInput.files[0]);
+            const file = modeloInput.files[0];
+            if (!file) return;
+            if (file.size > 200 * 1024 * 1024) {
+                mostrarResultado('El modelo supera el límite de 200 MB. Elige un archivo más pequeño.', 'error');
+                modeloInput.value = '';
+                return;
+            }
+            mostrarModeloPreview(file);
         });
 
         quitarModelo.addEventListener('click', limpiarModelo);
